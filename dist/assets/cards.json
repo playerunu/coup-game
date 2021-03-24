@@ -1,0 +1,47 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": "assets/ambassador.png",
+                "type": "image",
+                "key": "ambassador"
+            },
+            {
+                "url": "assets/assasin.png",
+                "type": "image",
+                "key": "assasin"
+            },
+            {
+                "url": "assets/back.png",
+                "type": "image",
+                "key": "back"
+            },
+            {
+                "url": "assets/captain.png",
+                "type": "image",
+                "key": "captain"
+            },
+            {
+                "url": "assets/coin.png",
+                "type": "image",
+                "key": "coin"
+            },
+            {
+                "url": "assets/contessa.png",
+                "type": "image",
+                "key": "contessa"
+            },
+            {
+                "url": "assets/duke.png",
+                "type": "image",
+                "key": "duke"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2
+    }
+}

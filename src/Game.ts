@@ -7,6 +7,7 @@ export default class Boot extends Phaser.Scene {
 
 		this.load.pack("cards", "assets/cards.json");
 		this.load.pack("environment", "assets/environment.json");
+        this.load.image("playerBackground", "assets/player-description-background.png");
 	}
 
 	create() {

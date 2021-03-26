@@ -1,7 +1,11 @@
 import {Constants} from "../Constants";
+import {Coin} from "../objects/Coin";
+import { HeroPlayer } from "../objects/HeroPlayer";
 
 export class Level extends Phaser.Scene {
-	
+	private bankCoins : Coin[] = [];
+    public heroPlayer : HeroPlayer;
+
 	constructor() {
 		super("Level");
 	}
@@ -27,39 +31,18 @@ export class Level extends Phaser.Scene {
 
         
 		// Put some random coins on the table
-        const coinsArray =[];
-        for (let i = 0; i < 50; i++){
+        for (let i = 0; i < Constants.coninsTotal; i++){
             let x = Phaser.Math.Between(baseWidth/2 - 80, baseWidth/2 + 80);
             let y = Phaser.Math.Between(baseHeight/2 - 50, baseHeight/2 + 50);
-
-            let coin = this.add.image(x, y, "coin")
-                .setScale(0.3)
-                .setAngle(Phaser.Math.Between(0, 360))
-                .setInteractive();
-
-            coinsArray.push(coin);
             
-            coin.on("pointerdown", () =>  {
-                this.input.setDefaultCursor("url(assets/hand-move-grab.cur), pointer");
-            });
-
-            coin.on("pointerover", function() {
-                for (let cc of coinsArray) {
-                    cc.setTint(0x44ff44);
-                }
-            });
-
-            coin.on("pointerup", () => {
-                this.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
-                
-            });
-
-            coin.on("pointerout", function() {
-                for (let cc of coinsArray) {
-                    cc.clearTint();
-                }
-            });
+            const coin = new Coin(this, x, y);
+            this.add.existing(coin);
+            this.bankCoins.push(coin);
         }
+
+        // Place the hero player
+        this.heroPlayer = new HeroPlayer(this, baseWidth/2 - 40, baseHeight/2 + 200)
+        this.add.existing(this.heroPlayer);
 	}
 }
 

@@ -41,7 +41,8 @@ export class Level extends Phaser.Scene {
         }
 
         // Place the hero player
-        this.heroPlayer = new HeroPlayer(this, baseWidth/2 - 40, baseHeight/2 + 200)
+        this.heroPlayer = new HeroPlayer(this, baseWidth/2 - 40, baseHeight/2 + 200);
+        this.heroPlayer.setPlayerName("PLayer_unu");
         this.add.existing(this.heroPlayer);
 	}
 }

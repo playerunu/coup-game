@@ -1,6 +1,5 @@
 export class Coin extends Phaser.GameObjects.Image {
     static readonly defaultTextureName : String = "coin";
-    static readonly scaleFactor : number = 0.2;
     static readonly onHoverTint : number = 0x44ff44;
 
     private isInBank: boolean = true;
@@ -9,8 +8,8 @@ export class Coin extends Phaser.GameObjects.Image {
         super(scene, x, y, texture || Coin.defaultTextureName, frame);
 
         this.setInteractive();
-        this.setScale(Coin.scaleFactor);
         this.setAngle(Phaser.Math.Between(0, 360));
+        this.setOrigin(0,0);
         this.setupEvents();
     }
 

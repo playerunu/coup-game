@@ -13,16 +13,21 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
     constructor(scene, x?, y?, children?) {
         super(scene, x, y, children);
 
-        this.setInteractive();
         // Cards
-        const card1 = scene.add.image(0, 40,"ambassador").setScale(0.25);
-        const card2 = scene.add.image(card1.width/4 - 5, 40, "contessa").setScale(0.25);
+        const card1 = scene.add.image(0, 0,"ambassador");
+        const card2 = scene.add.image(card1.width-5, 0, "contessa");
+        
         this.add(card1);
         this.add(card2);
+
+        card1.setOrigin(0,0);
+        card2.setOrigin(0,0);
         
         // Player description background
-        this.playerBackground = scene.add.image(35, card1.height/4 - 3, "playerBackground");
+        this.playerBackground = scene.add.image(0, card1.height - 3, "playerBackground");
         this.add(this.playerBackground);
+
+        this.playerBackground.setOrigin(0,0);
 
         // Player text
         this.playerDescription = scene.add.text(0, 0, "ceva", { font: "16px Arial Black", fill: "#000" });
@@ -37,7 +42,8 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
         Phaser.Display.Align.In.Center(this.playerDescription, this.playerBackground);
     }
 
-    addCoin(coin: Coin) {
+    addCoin(coin: Coin) { 
+        console.log(this.x + " " + this.y);
         this.scene.tweens.add({
             targets: coin,
             x:  this.x,

@@ -9,13 +9,16 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
     
     private playerDescription: Phaser.GameObjects.Text;
     private playerBackground: Phaser.GameObjects.Image;
+    
+    static readonly COINS_STACK_HEIGHT : number = 40;
+    static readonly COIN_OFFSET : number = 20;
 
     constructor(scene, x?, y?, children?) {
         super(scene, x, y, children);
 
         // Cards
-        const card1 = scene.add.image(0, 0,"ambassador");
-        const card2 = scene.add.image(card1.width-5, 0, "contessa");
+        const card1 = scene.add.image(0, HeroPlayer.COINS_STACK_HEIGHT,"ambassador");
+        const card2 = scene.add.image(card1.width-5, HeroPlayer.COINS_STACK_HEIGHT, "contessa");
         
         this.add(card1);
         this.add(card2);
@@ -24,7 +27,7 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
         card2.setOrigin(0,0);
         
         // Player description background
-        this.playerBackground = scene.add.image(0, card1.height - 3, "playerBackground");
+        this.playerBackground = scene.add.image(0, card1.height - 3 + HeroPlayer.COINS_STACK_HEIGHT, "playerBackground");
         this.add(this.playerBackground);
 
         this.playerBackground.setOrigin(0,0);
@@ -39,16 +42,22 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
     setPlayerName(playerName:string) {
         this.playerName = playerName;
         this.playerDescription.setText(this.playerName);
-        Phaser.Display.Align.In.Center(this.playerDescription, this.playerBackground);
+        Phaser.Display.Align.In.TopCenter(this.playerDescription, this.playerBackground);
     }
 
     addCoin(coin: Coin) { 
-        console.log(this.x + " " + this.y);
         this.scene.tweens.add({
             targets: coin,
             x:  this.x,
             y:  this.y,
             duration: 300,
+            onComplete: () => {
+                this.addAt(coin);
+                coin.setX(this.coins.length * HeroPlayer.COIN_OFFSET).setY(0);
+                this.coins.push(coin);
+                coin.isInBank = false;
+                this.playerDescription.setText(this.playerName + "\n" + this.coins.length + " coins");
+            }
         })
     }
 }

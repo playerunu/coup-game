@@ -2,13 +2,12 @@ export class Coin extends Phaser.GameObjects.Image {
     static readonly defaultTextureName : String = "coin";
     static readonly onHoverTint : number = 0x44ff44;
 
-    private isInBank: boolean = true;
+    public isInBank: boolean = true;
 
     constructor(scene, x, y, texture?, frame?) {
         super(scene, x, y, texture || Coin.defaultTextureName, frame);
 
         this.setInteractive();
-        this.setAngle(Phaser.Math.Between(0, 360));
         this.setOrigin(0,0);
         this.setupEvents();
     }
@@ -18,7 +17,8 @@ export class Coin extends Phaser.GameObjects.Image {
             if (!this.isInBank) {
                 return;
             }
-
+            
+            this.scene.children.bringToTop(this);
             this.scene.input.setDefaultCursor("url(assets/hand-move-grab.cur), pointer");
         });
         
@@ -28,6 +28,7 @@ export class Coin extends Phaser.GameObjects.Image {
             }
 
             this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
+            this.clearTint();
             (this.scene as any).heroPlayer.addCoin(this);
         });
 

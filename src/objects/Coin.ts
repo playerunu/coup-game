@@ -3,6 +3,7 @@ export class Coin extends Phaser.GameObjects.Image {
     static readonly onHoverTint : number = 0x44ff44;
 
     public isInBank: boolean = true;
+    private isDragging: boolean = true;
 
     constructor(scene, x, y, texture?, frame?) {
         super(scene, x, y, texture || Coin.defaultTextureName, frame);
@@ -18,12 +19,13 @@ export class Coin extends Phaser.GameObjects.Image {
                 return;
             }
             
+            this.isDragging = true;
             this.scene.children.bringToTop(this);
             this.scene.input.setDefaultCursor("url(assets/hand-move-grab.cur), pointer");
         });
         
         this.on("pointerup", () => {
-            if (!this.isInBank) {
+            if (!this.isInBank || !this.isDragging) {
                 return;
             }
 
@@ -43,7 +45,9 @@ export class Coin extends Phaser.GameObjects.Image {
             if (!this.isInBank) {
                 return;
             }
-
+            
+            this.isDragging = false;
+            this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
             this.clearTint();
         });
     }

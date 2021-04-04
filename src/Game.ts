@@ -1,31 +1,25 @@
 import 'phaser';
 import { Level } from "./scenes/Level";
+import { Boot } from "./scenes/Boot";
+import { Lobby } from "./scenes/Lobby";
 import { Constants } from "./Constants";
 
-export default class Boot extends Phaser.Scene {
-	preload() {
-
-		this.load.pack("cards", "assets/cards.json");
-		this.load.pack("environment", "assets/environment.json");
-        this.load.image("playerBackground", "assets/player-description-background.png");
-	}
-
-	create() {
-		this.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
-		this.scene.start("Level");
-	}
-}
-
 const config = {
-	width: Constants.gameWidth,
-	height: Constants.gameHeight,
-	type: Phaser.AUTO,
-	scale: {
-		mode: Phaser.Scale.FIT,
-		autoCenter: Phaser.Scale.CENTER_BOTH
-	}
+    width: Constants.gameWidth,
+    height: Constants.gameHeight,
+    parent: 'phaser-example',
+    type: Phaser.AUTO,
+    dom: {
+        createContainer: true
+    },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    }
 };
 
 const game = new Phaser.Game(config);
-game.scene.add("Level", Level);
+
 game.scene.add("Boot", Boot, true);
+game.scene.add("Lobby", Lobby);
+game.scene.add("Level", Level);

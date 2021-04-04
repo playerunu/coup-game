@@ -8,16 +8,13 @@ export class Level extends Phaser.Scene {
     public heroPlayer : HeroPlayer;
     public enemyPlayers : EnemyPlayer[] = [];
 
-	constructor() {
-		super("Level");
-	}
-
 	create() {
-		
+		this.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
+        
         const baseWidth = Constants.gameWidth;
         const baseHeight = Constants.gameHeight;
 
-		// background
+		// Background
 		const background = this.add.image(0, 0, "background");
 		
         // Center the background in the game
@@ -26,7 +23,7 @@ export class Level extends Phaser.Scene {
             baseWidth, 
             baseHeight));
 		
-		// table
+		// Table
 		const table = this.add.image(baseWidth/4, baseHeight/4, "table");
 
 		Phaser.Display.Align.In.Center(table, background);

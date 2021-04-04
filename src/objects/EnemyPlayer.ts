@@ -1,8 +1,8 @@
 import {Coin} from "./Coin";
 import {Influence} from "../enums/Influence";
 
-export class HeroPlayer extends Phaser.GameObjects.Container {
-    private cards : Influence[] = [Influence.Duke, Influence.Contessa];
+export class EnemyPlayer extends Phaser.GameObjects.Container {
+    private revealedCards : Influence[] = [];
     private coins: Coin[] = [];
 
     private playerName : string;
@@ -17,8 +17,8 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
         super(scene, x, y, children);
 
         // Cards
-        const card1 = scene.add.image(0, HeroPlayer.COINS_STACK_HEIGHT,"ambassador");
-        const card2 = scene.add.image(card1.width-5, HeroPlayer.COINS_STACK_HEIGHT, "contessa");
+        const card1 = scene.add.image(0, EnemyPlayer.COINS_STACK_HEIGHT,"back");
+        const card2 = scene.add.image(card1.width-5, EnemyPlayer.COINS_STACK_HEIGHT, "back");
         
         this.add(card1);
         this.add(card2);
@@ -27,7 +27,7 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
         card2.setOrigin(0,0);
         
         // Player description background
-        this.playerBackground = scene.add.image(0, card1.height - 3 + HeroPlayer.COINS_STACK_HEIGHT, "playerBackground");
+        this.playerBackground = scene.add.image(0, card1.height - 3 + EnemyPlayer.COINS_STACK_HEIGHT, "playerBackground");
         this.add(this.playerBackground);
 
         this.playerBackground.setOrigin(0,0);
@@ -53,7 +53,7 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
             duration: 300,
             onComplete: () => {
                 this.add(coin);
-                coin.setX(this.coins.length * HeroPlayer.COIN_OFFSET).setY(0);
+                coin.setX(this.coins.length * EnemyPlayer.COIN_OFFSET).setY(0);
                 this.coins.push(coin);
                 coin.isInBank = false;
                 this.playerDescription.setText(this.playerName + "\n" + this.coins.length + " coins");

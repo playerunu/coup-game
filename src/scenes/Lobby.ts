@@ -43,7 +43,7 @@ export class Lobby extends Phaser.Scene {
                         player:{
                             name: inputText.value
                         }
-                    })
+                    });
                 } else {
                     this.scene.tweens.add({
                         targets: text,

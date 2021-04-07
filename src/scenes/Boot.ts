@@ -25,7 +25,7 @@ export class Boot extends Phaser.Scene {
 	}
 
 	create() {
-		this.socket = new WebSocket(Constants.wsServerUrl);
+		
 		this.scene.start("Lobby");
 		
 		this.socket.onmessage =( ev:any) => {

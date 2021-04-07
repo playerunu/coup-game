@@ -1,4 +1,6 @@
 import { Constants } from "./../Constants";
+import { MessageTypes} from "../enums/MessageTypes";
+import { game } from "../Game";
 
 export class Lobby extends Phaser.Scene {
 
@@ -16,7 +18,7 @@ export class Lobby extends Phaser.Scene {
             baseHeight));
 
         // Game title
-        let gameTitle = this.add.bitmapText(baseWidth / 2, 100, "desyrel", "COUP", 72);
+        let gameTitle = this.add.bitmapText(baseWidth / 2, 100, "desyrel", "COUP", 100);
         gameTitle.setOrigin(0.5, 0);
         gameTitle.setVisible(false);
 
@@ -36,6 +38,12 @@ export class Lobby extends Phaser.Scene {
                     this.setVisible(false);
                     text.setText("Welcome " + inputText.value);
                     gameTitle.setVisible(true);
+                    game.sendMessage({
+                        type: MessageTypes.PlayerJoined,
+                        player:{
+                            name: inputText.value
+                        }
+                    })
                 } else {
                     this.scene.tweens.add({
                         targets: text,
@@ -54,5 +62,19 @@ export class Lobby extends Phaser.Scene {
             duration: 3000,
             ease: "Power3"
         });
+
+        // Init WS listener
+        game.webSocket.addEventListener("message", this.onWsMessage);
     }
+
+    onWsMessage(event) {
+        const message = JSON.parse(event.data);
+
+        switch(message.type) {
+            case MessageTypes.GameStarted:
+                this.scene.start("Level");
+                break;
+        }
+    }
+    
 }

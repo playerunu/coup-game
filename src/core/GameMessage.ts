@@ -1,4 +1,4 @@
-export enum MessageTypes {
+export enum GameMessage {
     PlayerJoined,
     GameStarted
 } 

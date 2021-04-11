@@ -1,4 +1,4 @@
-export enum Action {
+export enum ActionType {
     TakeOneCoin, 
 	TakeTwoCoins,
 	TakeThreeCoins,
@@ -6,3 +6,8 @@ export enum Action {
 	Assasinate,
 	Steal
 }
+
+export type Action = {
+    actionType: ActionType;
+    hasCounterAction: boolean;
+} 

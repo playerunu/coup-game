@@ -1,5 +1,5 @@
 import { Constants } from "./../Constants";
-import { MessageTypes } from "../enums/MessageTypes";
+import { MessageTypes } from "../model/MessageTypes";
 import { wsConnection } from "../ws/WsConnection";
 
 export class Lobby extends Phaser.Scene {

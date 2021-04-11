@@ -1,5 +1,5 @@
 import {Coin} from "./Coin";
-import {Influence} from "../enums/Influence";
+import {Influence} from "../model/Influence";
 
 export class HeroPlayer extends Phaser.GameObjects.Container {
     private cards : Influence[] = [Influence.Duke, Influence.Contessa];

@@ -1,6 +1,6 @@
 import { Constants } from "./../Constants";
 import { MessageTypes } from "../enums/MessageTypes";
-import { game } from "../Game";
+import { wsConnection } from "../ws/WsConnection";
 
 export class Lobby extends Phaser.Scene {
     private OnWsMessage: any;
@@ -44,7 +44,7 @@ export class Lobby extends Phaser.Scene {
                     this.setVisible(false);
                     text.setText("Welcome " + inputText.value);
                     gameTitle.setVisible(true);
-                    game.sendMessage({
+                    wsConnection.sendMessage({
                         messageType: MessageTypes[MessageTypes.PlayerJoined],
                         data: {
                             name: inputText.value
@@ -70,7 +70,7 @@ export class Lobby extends Phaser.Scene {
         });
 
         // Init WS listener
-        game.webSocket.addEventListener("message", this.OnWsMessage);
+        wsConnection.addListener(this.OnWsMessage);
     }
 
     onWsMessage(event) {
@@ -79,7 +79,7 @@ export class Lobby extends Phaser.Scene {
 
         switch (message.MessageType) {
             case MessageTypes[MessageTypes.GameStarted]:
-                game.webSocket.removeEventListener("message", this.OnWsMessage);
+                wsConnection.removeListener(this.OnWsMessage);
                 this.scene.start("Level");
                 break;
         }

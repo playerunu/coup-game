@@ -19,21 +19,11 @@ class Game {
         }
     };
 
-    private socket : WebSocket = null;
-    get webSocket() {
-        return this.socket;
-    }
-
     constructor() {
         this.init();
     }
 
-    sendMessage(data) {
-        this.socket.send(JSON.stringify(data));
-    }
-
     private init() {
-        this.socket = new WebSocket(Constants.wsServerUrl);
         const game = new Phaser.Game(this.gameConfig);
 
         game.scene.add("Boot", Boot, true);

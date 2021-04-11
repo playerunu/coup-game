@@ -1,5 +1,3 @@
-import {Constants} from "../Constants";
-
 export class Boot extends Phaser.Scene {
 	preload() {
 

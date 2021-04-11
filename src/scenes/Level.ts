@@ -1,7 +1,7 @@
 import {Constants} from "../Constants";
-import {Coin} from "../objects/Coin";
-import { EnemyPlayer } from "../objects/EnemyPlayer";
-import { HeroPlayer } from "../objects/HeroPlayer";
+import {Coin} from "../game-objects/Coin";
+import { EnemyPlayer } from "../game-objects/EnemyPlayer";
+import { HeroPlayer } from "../game-objects/HeroPlayer";
 
 export class Level extends Phaser.Scene {
 	private bankCoins : Coin[] = [];

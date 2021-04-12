@@ -5,4 +5,5 @@ export type Player = {
     name: string;
     cards: Card[];
     coins: integer;
+    gamePostion: integer;
 }

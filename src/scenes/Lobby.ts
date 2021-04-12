@@ -2,6 +2,7 @@ import { Constants } from "./../Constants";
 import { GameMessage } from "../core/GameMessage";
 import { wsConnection } from "../ws/WsConnection";
 import {WsScene} from "./WsScene";
+import {engine} from "../core/GameEngine";
 
 export class Lobby extends WsScene {
     create() {
@@ -68,7 +69,9 @@ export class Lobby extends WsScene {
 
     onWsMessage(event) {
         const message = JSON.parse(event.data);
-        console.log(message);
+        Object.assign(engine.game, message.Data);
+        console.log(message.Data);
+        console.log(engine.game);
 
         switch (message.MessageType) {
             case GameMessage[GameMessage.GameStarted]:

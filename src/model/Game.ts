@@ -3,8 +3,8 @@ import {Card} from "./Card";
 import {PlayerAction} from "./PlayerAction";
 
 export type Game = {
-    players: Player[];
-    currentPlayer: Player;
-    deck: Card[];
-    playerActions: PlayerAction[];
+    players?: Player[];
+    currentPlayer?: Player;
+    playerActions?: PlayerAction[];
+    tableCoins?: integer;
 }

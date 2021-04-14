@@ -1,4 +1,5 @@
 export enum GameMessage {
     PlayerJoined,
-    GameStarted
+    GameStarted,
+    YourCards,
 } 

@@ -1,8 +1,10 @@
 import { Constants } from "./../Constants";
+import { engine } from "../core/GameEngine";
 import { GameMessage } from "../core/GameMessage";
+import { Player } from "../model/Player";
 import { wsConnection } from "../ws/WsConnection";
-import {WsScene} from "./WsScene";
-import {engine} from "../core/GameEngine";
+import { WsScene } from "./WsScene";
+
 
 export class Lobby extends WsScene {
     create() {
@@ -39,12 +41,13 @@ export class Lobby extends WsScene {
                 if (inputText.value != "") {
                     this.removeListener("click");
                     this.setVisible(false);
-                    text.setText("Welcome " + inputText.value);
+                    engine.heroPlayerName = inputText.value;
+                    text.setText("Welcome " + engine.heroPlayerName);
                     gameTitle.setVisible(true);
                     wsConnection.sendMessage({
                         messageType: GameMessage[GameMessage.PlayerJoined],
                         data: {
-                            name: inputText.value
+                            name: engine.heroPlayerName
                         }
                     });
                 } else {
@@ -67,17 +70,51 @@ export class Lobby extends WsScene {
         });
     }
 
+    isObject(item) {
+        return (item && typeof item === 'object' && !Array.isArray(item));
+    }
+
+    mergeDeep(target, ...sources) {
+        if (!sources.length) return target;
+        const source = sources.shift();
+
+        if (this.isObject(target) && this.isObject(source)) {
+            for (const key in source) {
+                if (this.isObject(source[key])) {
+                    if (!target[key]) {
+                        Object.assign(target, { [key]: {} });
+                    } else {
+                        target[key] = Object.assign({}, target[key])
+                    }
+                    this.mergeDeep(target[key], source[key]);
+                } else {
+                    Object.assign(target, { [key]: source[key] });
+                }
+            }
+        }
+
+        return this.mergeDeep(target, ...sources);
+    }
+      
     onWsMessage(event) {
+        console.log(event.data);
         const message = JSON.parse(event.data);
-        Object.assign(engine.game, message.Data);
         console.log(message.Data);
-        console.log(engine.game);
 
         switch (message.MessageType) {
             case GameMessage[GameMessage.GameStarted]:
+                this.mergeDeep(engine.game, message.Data);
                 this.startScene("Level");
+                break;
+            case GameMessage[GameMessage.YourCards]:
+                let player: Player = {
+                    name: engine.heroPlayerName,
+                    cards: [],
+                }
+                Object.assign(player.cards, message.Data);
+                engine.game.players = [player];
+                console.log(engine.game);
                 break;
         }
     }
-
 }

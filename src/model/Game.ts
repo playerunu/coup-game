@@ -3,7 +3,7 @@ import {Card} from "./Card";
 import {PlayerAction} from "./PlayerAction";
 
 export type Game = {
-    players?: Player[];
+    players: Player[];
     currentPlayer?: Player;
     playerActions?: PlayerAction[];
     tableCoins?: integer;

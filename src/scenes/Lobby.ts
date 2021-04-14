@@ -4,6 +4,7 @@ import { GameMessage } from "../core/GameMessage";
 import { Player } from "../model/Player";
 import { wsConnection } from "../ws/WsConnection";
 import { WsScene } from "./WsScene";
+import { deepMerge } from "../utils/deepMerge";
 
 
 export class Lobby extends WsScene {
@@ -31,7 +32,7 @@ export class Lobby extends WsScene {
         let text = this.add.text(baseWidth / 2, 10, "Please enter your name", { color: "black", fontSize: "20px" });
         text.setOrigin(0.5, 0);
 
-        let nameForm = this.add.dom(baseWidth / 2, 0).createFromCache("nameform");
+        let nameForm = this.add.dom(baseWidth / 2, baseHeight / 2).createFromCache("nameform");
 
         nameForm.addListener("click");
         nameForm.on("click", function (event) {
@@ -62,48 +63,22 @@ export class Lobby extends WsScene {
             }
         });
 
-        this.tweens.add({
-            targets: nameForm,
-            y: baseHeight / 2,
-            duration: 3000,
-            ease: "Power3"
-        });
+        // this.tweens.add({
+        //     targets: nameForm,
+        //     y: baseHeight / 2,
+        //     duration: 3000,
+        //     ease: "Power3"
+        // });
     }
 
-    isObject(item) {
-        return (item && typeof item === 'object' && !Array.isArray(item));
-    }
-
-    mergeDeep(target, ...sources) {
-        if (!sources.length) return target;
-        const source = sources.shift();
-
-        if (this.isObject(target) && this.isObject(source)) {
-            for (const key in source) {
-                if (this.isObject(source[key])) {
-                    if (!target[key]) {
-                        Object.assign(target, { [key]: {} });
-                    } else {
-                        target[key] = Object.assign({}, target[key])
-                    }
-                    this.mergeDeep(target[key], source[key]);
-                } else {
-                    Object.assign(target, { [key]: source[key] });
-                }
-            }
-        }
-
-        return this.mergeDeep(target, ...sources);
-    }
-      
     onWsMessage(event) {
-        console.log(event.data);
         const message = JSON.parse(event.data);
-        console.log(message.Data);
+        console.log("Received game message:", message.Data);
 
         switch (message.MessageType) {
             case GameMessage[GameMessage.GameStarted]:
-                this.mergeDeep(engine.game, message.Data);
+                engine.updateGame(message.Data);
+                console.log(engine.game);
                 this.startScene("Level");
                 break;
             case GameMessage[GameMessage.YourCards]:
@@ -111,8 +86,8 @@ export class Lobby extends WsScene {
                     name: engine.heroPlayerName,
                     cards: [],
                 }
-                Object.assign(player.cards, message.Data);
-                engine.game.players = [player];
+                player.cards = message.Data;
+                deepMerge(engine.game,{"players":[player]})
                 console.log(engine.game);
                 break;
         }

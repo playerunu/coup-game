@@ -4,7 +4,7 @@ import {PlayerAction} from "./PlayerAction";
 
 export type Game = {
     players: Player[];
-    currentPlayer?: Player;
-    playerActions?: PlayerAction[];
-    tableCoins?: integer;
+    currentPlayer: Player;
+    playerActions: PlayerAction[];
+    tableCoins: integer;
 }

@@ -1,5 +1,6 @@
 import {Coin} from "./Coin";
 import {Influence} from "../model/Influence";
+import {Player} from "../model/Player";
 
 export class HeroPlayer extends Phaser.GameObjects.Container {
     private cards : Influence[] = [Influence.Duke, Influence.Contessa];
@@ -13,12 +14,12 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
     static readonly COINS_STACK_HEIGHT : number = 40;
     static readonly COIN_OFFSET : number = 20;
 
-    constructor(scene, x?, y?, children?) {
+    constructor(player: Player, scene, x?, y?, children?) {
         super(scene, x, y, children);
 
         // Cards
-        const card1 = scene.add.image(0, HeroPlayer.COINS_STACK_HEIGHT,"ambassador");
-        const card2 = scene.add.image(card1.width-5, HeroPlayer.COINS_STACK_HEIGHT, "contessa");
+        const card1 = scene.add.image(0, HeroPlayer.COINS_STACK_HEIGHT, Influence[player.card1.influence].toLowerCase());
+        const card2 = scene.add.image(card1.width-5, HeroPlayer.COINS_STACK_HEIGHT, Influence[player.card2.influence].toLowerCase());
         
         this.add(card1);
         this.add(card2);
@@ -32,11 +33,14 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
 
         this.playerBackground.setOrigin(0,0);
 
-        // Player text
+        // Player text description area
         this.playerDescription = scene.add.text(0, 0, "ceva", { font: "16px Arial Black", fill: "#000" });
         this.add(this.playerDescription);
 
         Phaser.Display.Align.In.Center(this.playerDescription, this.playerBackground);
+
+        // Player name
+        this.setPlayerName(player.name);
     }
 
     setPlayerName(playerName:string) {

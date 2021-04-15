@@ -78,16 +78,11 @@ export class Lobby extends WsScene {
         switch (message.MessageType) {
             case GameMessage[GameMessage.GameStarted]:
                 engine.updateGame(message.Data);
-                console.log(engine.game);
                 this.startScene("Level");
+                console.log(engine.game);
                 break;
             case GameMessage[GameMessage.YourCards]:
-                let player: Player = {
-                    name: engine.heroPlayerName,
-                    cards: [],
-                }
-                player.cards = message.Data;
-                deepMerge(engine.game,{"players":[player]})
+                engine.setHeroPlayerCards(message.Data);
                 console.log(engine.game);
                 break;
         }

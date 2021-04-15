@@ -1,5 +1,6 @@
 import {Coin} from "./Coin";
 import {Influence} from "../model/Influence";
+import {Player} from "../model/Player";
 
 export class EnemyPlayer extends Phaser.GameObjects.Container {
     private revealedCards : Influence[] = [];
@@ -13,7 +14,7 @@ export class EnemyPlayer extends Phaser.GameObjects.Container {
     static readonly COINS_STACK_HEIGHT : number = 40;
     static readonly COIN_OFFSET : number = 20;
 
-    constructor(scene, x?, y?, children?) {
+    constructor(player: Player, scene, x?, y?, children?) {
         super(scene, x, y, children);
 
         // Cards
@@ -32,11 +33,14 @@ export class EnemyPlayer extends Phaser.GameObjects.Container {
 
         this.playerBackground.setOrigin(0,0);
 
-        // Player text
+        // Player text description area
         this.playerDescription = scene.add.text(0, 0, "ceva", { font: "16px Arial Black", fill: "#000" });
         this.add(this.playerDescription);
 
         Phaser.Display.Align.In.Center(this.playerDescription, this.playerBackground);
+
+        // Player name
+        this.setPlayerName(player.name);
     }
 
     setPlayerName(playerName:string) {

@@ -3,11 +3,18 @@ import { Coin } from "../game-objects/Coin";
 import { EnemyPlayer } from "../game-objects/EnemyPlayer";
 import { HeroPlayer } from "../game-objects/HeroPlayer";
 import {GameMessage} from "../core/GameMessage";
+import { engine } from "../core/GameEngine";
 
 export class Level extends Phaser.Scene {
     private bankCoins: Coin[] = [];
     public heroPlayer: HeroPlayer;
     public enemyPlayers: EnemyPlayer[] = [];
+
+    private enemyPlayersXY = [
+        {x: -40, y: -400},
+        {x: -550, y: -60},
+        {x: +360, y: -60},
+    ];
 
     create() {
         this.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
@@ -31,7 +38,7 @@ export class Level extends Phaser.Scene {
 
 
         // Put some random coins on the table
-        for (let i = 0; i < Constants.coninsTotal; i++) {
+        for (let i = 0; i < engine.game.tableCoins; i++) {
             let x = Phaser.Math.Between(baseWidth / 2 - 80, baseWidth / 2 + 80);
             let y = Phaser.Math.Between(baseHeight / 2 - 50, baseHeight / 2 + 50);
 
@@ -41,31 +48,32 @@ export class Level extends Phaser.Scene {
         }
 
         // Place the hero player
-        this.heroPlayer = new HeroPlayer(this, baseWidth / 2 - 40, baseHeight / 2 + 150);
-        this.heroPlayer.setPlayerName("PLayer_unu");
+        this.heroPlayer = new HeroPlayer(engine.getHeroPlayer(), this, baseWidth / 2 - 40, baseHeight / 2 + 150);
         this.add.existing(this.heroPlayer);
 
         // Place the enemy players
-        let enemyPlayer = new EnemyPlayer(this, baseWidth / 2 - 40, baseHeight / 2 - 400);
-        enemyPlayer.setPlayerName("GigiKent");
-        this.add.existing(enemyPlayer);
-        this.enemyPlayers.push(enemyPlayer);
+        engine.game.players.forEach((player, index) => {
+            if (index >= this.enemyPlayersXY.length) {
+                return;
+            }
 
-        enemyPlayer = new EnemyPlayer(this, baseWidth / 2 - 550, baseHeight / 2 - 60);
-        enemyPlayer.setPlayerName("DucuBertzi");
-        this.add.existing(enemyPlayer);
-        this.enemyPlayers.push(enemyPlayer);
+            if (engine.isHeroPlayer(player)){
+                return;
+            }
 
-        enemyPlayer = new EnemyPlayer(this, baseWidth / 2 + 360, baseHeight / 2 - 60);
-        enemyPlayer.setPlayerName("DauGherle");
-        this.add.existing(enemyPlayer);
-        this.enemyPlayers.push(enemyPlayer);
+            let x = baseWidth / 2 + this.enemyPlayersXY[index].x;
+            let y = baseHeight / 2 + this.enemyPlayersXY[index].y;
 
+            let enemyPlayer = new EnemyPlayer(player, this, x, y);
+            this.add.existing(enemyPlayer);
+            this.enemyPlayers.push(enemyPlayer);    
+        });
+        
         // Give the initial coins to each player
         this.heroPlayer.addCoin(this.bankCoins.pop());
         this.heroPlayer.addCoin(this.bankCoins.pop());
 
-        for (enemyPlayer of this.enemyPlayers) {
+        for (let enemyPlayer of this.enemyPlayers) {
             enemyPlayer.addCoin(this.bankCoins.pop());
             enemyPlayer.addCoin(this.bankCoins.pop());
         }

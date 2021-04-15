@@ -1,5 +1,6 @@
 import {Game} from "../model/Game";
 import {Card} from "../model/Card";
+import {Influence} from "../model/Influence";
 import {Player} from "../model/Player";
 import {keyToString} from "../utils/keyToString";
 import {deepMerge} from "../utils/deepMerge";
@@ -17,28 +18,67 @@ export class GameEngine {
 
     updateGame(source: any) {
         let game = this.game;
+
         for (const key in source) {
             // We use keyToString helper function here in order to force
             // a strongly-typed check on each of the game keys 
             switch(key) {
-                case keyToString(game, game.players):
-
+                case "players":
+                    for (let player of source.players) {
+                        let gamePlayer = game.players.find(p => p.name == player.name);
+                        if (gamePlayer) {
+                            // If the player already exists, merge the update
+                            deepMerge(gamePlayer, player);
+                        } else {
+                            // If the player does not exists, add the update obj to the array
+                            game.players.push(player);
+                        }
+                    }
                     break;
-                case keyToString(game, game.currentPlayer):
-                    deepMerge(game.currentPlayer, source[key]);
+                
+                case "currentPlayer":
+                    deepMerge(game.currentPlayer, source.currentPlayer);
                     break;
-                case keyToString(game, game.playerActions):
+                
+                case "playerActions":
                     break;
-                case keyToString(game, game.tableCoins):
+                
+                case "tableCoins":
+                    game.tableCoins = source.tableCoins;
                     break;
-
             }
         }
-        return 0;
     }
     
-    setHeroPlayerCards(cards: Card[]) {
+    // Sets hero player full card details
+    // If the player is not fund, it will create it
+    setHeroPlayerCards(cards:any) {
+        // Extract the cards and convert the influence from string to enum
+        let {card1, card2} = cards;
+        card1.influence = Influence[card1.influence];
+        card2.influence = Influence[card2.influence];
+
         // Lookup if the player already exists in game state
+        let heroPlayer = this.getHeroPlayer();
+
+        // Player not found, create it 
+        if (heroPlayer == null){
+            heroPlayer = {
+                name: this.heroPlayerName,
+            }
+        }
+
+        heroPlayer.card1 = card1;
+        heroPlayer.card2 = card2;
+
+        this.updateGame({"players":[heroPlayer]});
+    }
+
+    isHeroPlayer(player: Player){
+        return player.name == this.heroPlayerName;
+    }
+
+    getHeroPlayer(): Player {
         let heroPlayer: Player = null;
 
         for (const player of this.game.players) {
@@ -48,19 +88,7 @@ export class GameEngine {
             }
         }
 
-        // Player not found, create it 
-        if (heroPlayer == null){
-            heroPlayer = {
-                name: this.heroPlayerName,
-                cards: []
-            }
-        }
-
-        heroPlayer.cards = cards;
-    }
-
-    isHeroPlayer(player: Player){
-        return player.name == this.heroPlayerName;
+        return heroPlayer;
     }
 }
 

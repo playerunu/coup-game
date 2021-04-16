@@ -35,9 +35,10 @@ export class Coin extends Phaser.GameObjects.Image {
         });
 
         this.on("pointerover", () => {
-            if (!this.isInBank) {
+            if (!this.isInBank || this.isDragging) {
                 return;
             }
+            this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
             this.setTint(Coin.onHoverTint);
         });
 
@@ -47,7 +48,7 @@ export class Coin extends Phaser.GameObjects.Image {
             }
             
             this.isDragging = false;
-            this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
+            this.scene.input.setDefaultCursor("default");
             this.clearTint();
         });
     }

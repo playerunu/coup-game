@@ -17,8 +17,6 @@ export class Level extends Phaser.Scene {
     ];
 
     create() {
-        this.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
-
         const baseWidth = Constants.gameWidth;
         const baseHeight = Constants.gameHeight;
 

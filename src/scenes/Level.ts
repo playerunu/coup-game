@@ -4,6 +4,7 @@ import { EnemyPlayer } from "../game-objects/EnemyPlayer";
 import { HeroPlayer } from "../game-objects/HeroPlayer";
 import {GameMessage} from "../core/GameMessage";
 import { engine } from "../core/GameEngine";
+import { VsPlayerPanel } from "../game-objects/VsPlayerPanel";
 
 export class Level extends Phaser.Scene {
     private bankCoins: Coin[] = [];
@@ -14,6 +15,12 @@ export class Level extends Phaser.Scene {
         {x: -40, y: -400},
         {x: -550, y: -60},
         {x: +360, y: -60},
+    ];
+
+    private vsPlayerPanelXY = [
+        {x: -0, y: 20},
+        {x: -0, y: 40},
+        {x: +0, y: 60},
     ];
 
     create() {
@@ -49,7 +56,9 @@ export class Level extends Phaser.Scene {
         this.heroPlayer = new HeroPlayer(engine.getHeroPlayer(), this, baseWidth / 2 - 40, baseHeight / 2 + 150);
         this.add.existing(this.heroPlayer);
 
-        // Place the enemy players
+        let maxPlayerLength = Math.max(...engine.game.players.map(player => player.name.length), 0);
+
+        // Place the enemy players and the vsPlayer panels
         engine.game.players.forEach((player, index) => {
             if (index >= this.enemyPlayersXY.length) {
                 return;
@@ -61,10 +70,18 @@ export class Level extends Phaser.Scene {
 
             let x = baseWidth / 2 + this.enemyPlayersXY[index].x;
             let y = baseHeight / 2 + this.enemyPlayersXY[index].y;
-
             let enemyPlayer = new EnemyPlayer(player, this, x, y);
             this.add.existing(enemyPlayer);
             this.enemyPlayers.push(enemyPlayer);    
+
+            x = baseWidth - 300;
+            y = 0 + this.vsPlayerPanelXY[index].y;
+            let vsPlayerPanel = new VsPlayerPanel(player, maxPlayerLength, this, x, y);
+            vsPlayerPanel.setScale(0.5);
+            vsPlayerPanel.OnStealPointerOver(() => {
+                enemyPlayer.setTint();
+            })
+            this.add.existing(vsPlayerPanel);
         });
         
         // Give the initial coins to each player
@@ -75,6 +92,8 @@ export class Level extends Phaser.Scene {
             enemyPlayer.addCoin(this.bankCoins.pop());
             enemyPlayer.addCoin(this.bankCoins.pop());
         }
+
+        this.add.text(baseWidth - 200, 10, "Steal    Assassinate", { font: "16px Arial Black" });
     }
 
     onWsMessage(event) {

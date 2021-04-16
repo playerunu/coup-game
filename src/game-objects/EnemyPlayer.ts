@@ -16,7 +16,7 @@ export class EnemyPlayer extends Phaser.GameObjects.Container {
 
     constructor(player: Player, scene, x?, y?, children?) {
         super(scene, x, y, children);
-
+        
         // Cards
         const card1 = scene.add.image(0, EnemyPlayer.COINS_STACK_HEIGHT,"back");
         const card2 = scene.add.image(card1.width-5, EnemyPlayer.COINS_STACK_HEIGHT, "back");
@@ -64,4 +64,9 @@ export class EnemyPlayer extends Phaser.GameObjects.Container {
             }
         })
     }
+
+    setTint() {
+        this.playerBackground.setTint(0x44ff44);
+    }
+    
 }

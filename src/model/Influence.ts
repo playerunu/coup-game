@@ -1,7 +1,7 @@
 export enum Influence {
     Duke,
     Captain,
-    Assasin,
+    Assassin,
     Contessa,
     Ambassador
 }

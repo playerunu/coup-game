@@ -4,6 +4,19 @@
     <meta charset="utf-8">
     <script src="game.js"></script>
   </head>
+  <style>
+      /* 
+        CSS hack:
+        This is required in order fix a Phaser3 bug that causes custom cursor not be rendered correctly
+
+        https://phaser.discourse.group/t/pointerup-and-pointerwheel-listeners-are-not-triggered/9254/5 
+      */
+      
+      div:first-child{
+          pointer-events: none;
+      }
+
+  </style>
   <body>
   </body>
 </html>

@@ -45,6 +45,21 @@
                 "url": "assets/captain-icon.png",
                 "type": "image",
                 "key": "captain-icon"
+            },
+            {
+                "url": "assets/contessa-icon.png",
+                "type": "image",
+                "key": "contessa-icon"
+            },
+            {
+                "url": "assets/duke-icon.png",
+                "type": "image",
+                "key": "duke"
+            },
+            {
+                "url": "assets/ambassador-icon.png",
+                "type": "image",
+                "key": "ambassador-icon"
             }
         ]
     },

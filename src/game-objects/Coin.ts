@@ -1,4 +1,5 @@
 import {Constants} from "../Constants";
+import { engine } from "../core/GameEngine";
 
 export class Coin extends Phaser.GameObjects.Image {
     static readonly defaultTextureName : String = "coin";
@@ -17,41 +18,46 @@ export class Coin extends Phaser.GameObjects.Image {
 
     private setupEvents() {
         this.on("pointerdown", () =>  {
-            if (!this.isInBank) {
+            if (!this.canTake()) {
                 return;
             }
             
-            this.isDragging = true;
             this.scene.children.bringToTop(this);
             this.scene.input.setDefaultCursor("url(assets/hand-move-grab.cur), pointer");
         });
         
         this.on("pointerup", () => {
-            if (!this.isInBank || !this.isDragging) {
+            if (!this.canTake()) {
                 return;
             }
 
             this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
             this.clearTint();
-            (this.scene as any).heroPlayer.pushCoin(this);
+            
+            this.isDragging = true;
+            this.waitingChallenge = true;
+            (this.scene as any).heroPlayer.pushCoin(this, true);
         });
 
         this.on("pointerover", () => {
-            if (!this.isInBank || this.isDragging) {
+            if (!this.canTake()) {
                 return;
             }
+
             this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
             this.setTint(Constants.greenTint);
         });
 
         this.on("pointerout", () => {
-            if (!this.isInBank) {
-                return;
-            }
-            
-            this.isDragging = false;
             this.scene.input.setDefaultCursor("default");
-            this.clearTint();
+            
+            if (this.isInBank) {
+                this.clearTint();
+            }
         });
+    }
+
+    private canTake() {
+        return engine.canTakeCoin() && this.isInBank && !this.isDragging;
     }
 }

@@ -5,6 +5,7 @@ import {PlayerAction} from "./PlayerAction";
 export type Game = {
     players: Player[];
     currentPlayer: Player;
+    currentPlayerAction?: PlayerAction;
     playerActions: PlayerAction[];
     tableCoins: integer;
 }

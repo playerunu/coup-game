@@ -4,6 +4,8 @@ import {Influence} from "../model/Influence";
 import {Player} from "../model/Player";
 import {influenceToString} from "../model/Influence";
 import {deepMerge} from "../utils/deepMerge";
+import { ActionType } from "../model/Action";
+import { PlayerAction } from "../model/PlayerAction";
 
 export class GameEngine {
     // Intial game state is empty,  it will be populated by incremental updates from the back-end
@@ -15,6 +17,16 @@ export class GameEngine {
     }
 
     public heroPlayerName: string;
+    
+    public pendingPlayerAction: PlayerAction = null;
+    private onPendingActionConfirm: () => void;
+    set OnPendingActionConfirm(callback: () => void) {
+        this.onPendingActionConfirm = callback;
+    }
+    private onPendingActionCancel: () => void;
+    set OnPendingActionCancel(callback: () => void) {
+        this.onPendingActionCancel = callback;
+    }
 
     updateGame(source: any) {
         let game = this.game;
@@ -107,6 +119,75 @@ export class GameEngine {
             card1Img, 
             card2Img
         }
+    }
+
+    canTakeCoin() {
+        if (!this.isHeroPlayer(this.game.currentPlayer)) {
+            return false;
+        }
+
+        if (this.game.currentPlayerAction) {
+            return false;
+        }
+
+        if (this.pendingPlayerAction && this.pendingPlayerAction.action.actionType === ActionType.TakeThreeCoins) {
+            return false;
+        }
+
+        return true;
+    }
+
+    takeCoin() {
+        if (!this.pendingPlayerAction) {
+            this.pendingPlayerAction = {
+                action: {
+                    actionType:ActionType.TakeOneCoin,
+                    hasCounterAction: false
+                }
+            }
+            return;
+        } else if (this.pendingPlayerAction.action.actionType == ActionType.TakeOneCoin) {
+            this.pendingPlayerAction.action.actionType = ActionType.TakeTwoCoins;
+            this.pendingPlayerAction.action.hasCounterAction = true;
+        } else if (this.pendingPlayerAction.action.actionType == ActionType.TakeTwoCoins) {
+            this.pendingPlayerAction.action.actionType = ActionType.TakeThreeCoins;
+        }
+
+        return;
+    }
+
+    confirmPendingAction() {
+        this.game.currentPlayerAction = this.pendingPlayerAction;
+        this.pendingPlayerAction = null;
+
+        this.onPendingActionConfirm();
+    }
+
+    cancelPendingAction() {
+        this.pendingPlayerAction = null;
+        this.onPendingActionCancel();
+    }
+
+    getCurrentActionText() : string {
+        const currentPlayerName = this.game.currentPlayer.name;
+        const vsPlayerName = this.game.currentPlayerAction?.vsPlayer;
+
+        if (this.game.currentPlayerAction) {
+            switch (this.game.currentPlayerAction.action.actionType) {
+                case (ActionType.TakeOneCoin):
+                    return `${currentPlayerName} takes 1 coin`;
+                case (ActionType.TakeOneCoin):
+                    return `${currentPlayerName} wants to take 2 coins`;
+                case (ActionType.TakeOneCoin):
+                    return `${currentPlayerName} wants to take 3 coins`;
+                case (ActionType.Assasinate):
+                    return `${currentPlayerName} wants to Assassinate ${vsPlayerName}`;
+                case (ActionType.Steal):
+                    return `${currentPlayerName} wants to Steal from ${vsPlayerName}`;
+            }
+        } 
+
+        return "";
     }
 }
 

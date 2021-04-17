@@ -26,16 +26,13 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
         this.onAssassinatePointerOut = callback;
     }
 
-    constructor(player: Player, descriptionLength, scene, x?, y?, children?) {
+    constructor(player: Player, scene, x?, y?, children?) {
         super(scene, x, y, children);
 
         this.playerName = player.name;
 
         // Player name
-        this.playerDescription = scene.add.text(0, 0,
-            this.playerName.padEnd(descriptionLength, " "),
-            { font: "16px Arial Black", fill: "#000" }
-        );
+        this.playerDescription = scene.add.text(0, 0, this.playerName,{ font: "16px Arial Black", fill: "#000" });
         this.add(this.playerDescription);
 
         // Card icons

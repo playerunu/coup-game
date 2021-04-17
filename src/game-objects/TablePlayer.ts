@@ -2,11 +2,15 @@ import {Coin} from "./Coin";
 import {Player} from "../model/Player";
 import {Constants} from "../Constants";
 import {engine} from "../core/GameEngine";
+import { Engine } from "matter";
 
 export class TablePlayer extends Phaser.GameObjects.Container {
     private coins: Coin[] = [];
 
     private playerName : string;
+    get PlayerName() {
+        return this.playerName;
+    }
     
     private playerDescription: Phaser.GameObjects.Text;
     private playerBackground: Phaser.GameObjects.Image;
@@ -36,9 +40,13 @@ export class TablePlayer extends Phaser.GameObjects.Container {
 
         // Player name
         this.setPlayerName(player.name);
+
+        if (engine.isHeroPlayer(player)) {
+            this.setupCoinPanelActions();
+        }
     }
 
-    pushCoin(coin: Coin) { 
+    pushCoin(coin: Coin, isHeroPlayerAction = false) { 
         this.scene.tweens.add({
             targets: coin,
             x:  this.x,
@@ -50,6 +58,10 @@ export class TablePlayer extends Phaser.GameObjects.Container {
                 this.coins.push(coin);
                 coin.isInBank = false;
                 coin.isDragging = false;
+                if (isHeroPlayerAction) {
+                    coin.setTint(Constants.yellowTint);
+                    engine.takeCoin();
+                }
                 this.playerDescription.setText(this.playerName + "\n" + this.coins.length + " coins");
             }
         })
@@ -58,16 +70,16 @@ export class TablePlayer extends Phaser.GameObjects.Container {
     popCoin(coin: Coin) { 
         this.scene.tweens.add({
             targets: coin,
-            x:  this.x,
-            y:  this.y,
+            x:  Phaser.Math.Between(-40, 120),
+            y:  Phaser.Math.Between(-120, -180),
             duration: 300,
             onComplete: () => {
-                this.add(coin);
-                coin.setX(this.coins.length * TablePlayer.COIN_OFFSET).setY(0);
-                this.coins.push(coin);
-                coin.isInBank = false;
+                this.scene.add.existing(coin);
+                this.coins.pop();
+                coin.isInBank = true;
                 coin.isDragging = false;
-                coin.setTint(Constants.redTint);
+                coin.waitingChallenge = false;
+                coin.clearTint();
                 this.playerDescription.setText(this.playerName + "\n" + this.coins.length + " coins");
             }
         })
@@ -77,8 +89,8 @@ export class TablePlayer extends Phaser.GameObjects.Container {
         this.drawCards(player);
     }
 
-    setTint() {
-        this.playerBackground.setTint(Constants.greenTint);
+    setTint(color) {
+        this.playerBackground.setTint(color);
     }
 
     clearTint() {
@@ -112,6 +124,22 @@ export class TablePlayer extends Phaser.GameObjects.Container {
 
         if (player.card2.isRevealed) {
             this.card2.setAlpha(0.7);
+        }
+    }
+
+    private setupCoinPanelActions() {
+        engine.OnPendingActionConfirm = () => {
+            for (let coin of this.coins) {
+                coin.waitingChallenge = false;
+                coin.clearTint();
+            }
+        }
+        engine.OnPendingActionCancel = () => {
+            for (let coin of this.coins) {
+                if (coin.waitingChallenge) {
+                    this.popCoin(coin);
+                }
+            }
         }
     }
 }

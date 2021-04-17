@@ -8,11 +8,16 @@ import { TakeCoinsPanel } from "../game-objects/TakeCoinsPanel";
 
 export class Level extends Phaser.Scene {
     private bankCoins: Coin[] = [];
+    private coinsPanel: TakeCoinsPanel;
+    private currentPlayerTween: Phaser.Tweens.Tween;
+    private currentActionDescription: Phaser.GameObjects.Text;
+    private curentActionZone: Phaser.GameObjects.Zone;
+    private table: Phaser.GameObjects.Image;
     public heroPlayer: TablePlayer;
     public enemyPlayers: TablePlayer[] = [];
 
     private enemyPlayersXY = [
-        { x: -40, y: -400 },
+        { x: -75, y: -400 },
         { x: -550, y: -60 },
         { x: +360, y: -60 },
     ];
@@ -31,17 +36,13 @@ export class Level extends Phaser.Scene {
         const background = this.add.image(0, 0, "background");
 
         // Center the background in the game
-        Phaser.Display.Align.In.Center(background, this.add.zone(baseWidth / 2,
-            baseHeight / 2,
-            baseWidth,
-            baseHeight));
+        Phaser.Display.Align.In.Center(background, this.add.zone(0,0,baseWidth,baseHeight).setOrigin(0,0));
 
         // Table
-        const table = this.add.image(baseWidth / 4, baseHeight / 4, "table");
+        this.table = this.add.image(baseWidth / 4, baseHeight / 4, "table");
+        Phaser.Display.Align.In.Center(this.table, background);
 
-        Phaser.Display.Align.In.Center(table, background);
-
-        // Put some random coins on the table
+        // Randomly spread the coins on the table
         for (let i = 0; i < engine.game.tableCoins; i++) {
             let x = Phaser.Math.Between(baseWidth / 2 - 80, baseWidth / 2 + 80);
             let y = Phaser.Math.Between(baseHeight / 2 - 50, baseHeight / 2 + 50);
@@ -50,15 +51,19 @@ export class Level extends Phaser.Scene {
             this.add.existing(coin);
             this.bankCoins.push(coin);
         }
-
-        const coinsPanel = new TakeCoinsPanel(this, baseWidth / 2, baseHeight / 2 -100);
-        this.add.existing(coinsPanel);
-
+        
+        // Current action description
+        this.curentActionZone = this.add.zone(0,250, baseWidth, baseHeight).setOrigin(0,0);
+        this.currentActionDescription =  this.add.text(0, 0, "", { font: "16px Arial Black", color: "#000000" });
+        
+        // Coins panel
+        this.coinsPanel = new TakeCoinsPanel(this, baseWidth / 2, baseHeight / 2 -100);
+        this.coinsPanel.setVisible(false);
+        this.add.existing(this.coinsPanel);
+      
         // Place the hero player
-        this.heroPlayer = new TablePlayer(engine.getHeroPlayer(), this, baseWidth / 2 - 40, baseHeight / 2 + 150);
+        this.heroPlayer = new TablePlayer(engine.getHeroPlayer(), this, baseWidth / 2 - 75, baseHeight / 2 + 150);
         this.add.existing(this.heroPlayer);
-
-        let maxNameLength = Math.max(...engine.game.players.map(player => player.name.length), 0);
 
         // Place the enemy players and the vsPlayer panels
         engine.game.players.forEach((player, index) => {
@@ -80,16 +85,16 @@ export class Level extends Phaser.Scene {
             // Vs player panel 
             x = baseWidth - 230;
             y = 0 + this.vsPlayerPanelXY[index].y;
-            let vsPlayerPanel = new VsPlayerPanel(player, maxNameLength, this, x, y);
+            let vsPlayerPanel = new VsPlayerPanel(player, this, x, y);
             
             vsPlayerPanel.OnStealPointerOver = () => {
-                enemyPlayer.setTint();
+                enemyPlayer.setTint(Constants.redTint);
             };
             vsPlayerPanel.OnStealPointerOut = () => {
                 enemyPlayer.clearTint();
             };
             vsPlayerPanel.OnAssassinatePointerOver = () => {
-                enemyPlayer.setTint();
+                enemyPlayer.setTint(Constants.redTint);
             };
             vsPlayerPanel.OnAssassinatePointerOut = () => {
                 enemyPlayer.clearTint();
@@ -108,6 +113,28 @@ export class Level extends Phaser.Scene {
         }
     }
 
+    // Refresh the game objects based on the current game state
+    update() {
+        const currentTablePlayer : TablePlayer = this.getCurrentTablePlayer();
+        
+        // Highlight the current player until he acts
+        if (!engine.game.currentPlayerAction && !engine.pendingPlayerAction) {
+            if (!this.currentPlayerTween) {
+                this.currentPlayerTween = this.startCurrentPlayerTween();
+            }
+        } else {
+            this.stopCurrentPlayerTween();
+        }
+
+        // Show/hide take coins panel buttons
+        this.coinsPanel.setVisible(!!engine.pendingPlayerAction);
+
+        // Show/hide the current action description text
+        this.currentActionDescription.setText(engine.getCurrentActionText());
+        Phaser.Display.Align.In.TopCenter(this.currentActionDescription, this.curentActionZone);
+
+    }
+
     onWsMessage(event) {
         const message = JSON.parse(event.data);
         console.log(message);
@@ -116,6 +143,46 @@ export class Level extends Phaser.Scene {
             case GameMessage[GameMessage.GameStarted]:
                 break;
         }
+    }
+
+    private getCurrentTablePlayer() : TablePlayer {
+        const currentPlayer = engine.game.currentPlayer;
+        
+        if (engine.isHeroPlayer(currentPlayer)) {
+            return this.heroPlayer;
+        } else {
+            return this.enemyPlayers.find((tablePlayer) => tablePlayer.PlayerName == currentPlayer.name);
+        }
+    }
+
+    private startCurrentPlayerTween() : Phaser.Tweens.Tween {
+        return this.tweens.addCounter(
+            {
+                from: 0,
+                to: 100,
+                duration: 1000,
+                ease: Phaser.Math.Easing.Sine.InOut,
+                repeat: -1,
+                yoyo: true,
+                onUpdate: (tween) => {
+                    const value = tween.getValue();
+                    const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
+                            Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
+                            Phaser.Display.Color.ValueToColor(Constants.greenTint),
+                            100,
+                            value
+                    );
+                    const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
+                    
+                    this.getCurrentTablePlayer().setTint(color);
+                },
+            }
+        )
+    }
+
+    private stopCurrentPlayerTween() {
+        this.getCurrentTablePlayer().setTint(Constants.greenTint);
+        this.currentPlayerTween.stop();
     }
 }
 

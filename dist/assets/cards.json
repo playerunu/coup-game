@@ -35,6 +35,16 @@
                 "url": "assets/duke.png",
                 "type": "image",
                 "key": "duke"
+            },
+            {
+                "url": "assets/assassin-icon.png",
+                "type": "image",
+                "key": "assassin-icon"
+            },
+            {
+                "url": "assets/captain-icon.png",
+                "type": "image",
+                "key": "captain-icon"
             }
         ]
     },

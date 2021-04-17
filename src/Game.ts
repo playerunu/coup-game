@@ -23,7 +23,8 @@ export const debugGameData = {
             "id": "",
             "name": "Bombardieru",
             "card1": {
-                "isRevealed": false
+                "influence": 2,
+                "isRevealed": true
             },
             "card2": {
                 "isRevealed": false
@@ -47,12 +48,12 @@ export const debugGameData = {
             "id": "",
             "name": "PLayer_unu",
             "card1": {
-                "influence": 1,
+                "influence": 0,
                 "isRevealed": false
             },
             "card2": {
-                "influence": 2,
-                "isRevealed": false
+                "influence": 4,
+                "isRevealed": true
             },
             "coins": 2,
             "gamePostion": 0

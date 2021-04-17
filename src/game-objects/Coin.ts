@@ -1,9 +1,11 @@
+import {Constants} from "../Constants";
+
 export class Coin extends Phaser.GameObjects.Image {
     static readonly defaultTextureName : String = "coin";
-    static readonly onHoverTint : number = 0x44ff44;
 
     public isInBank: boolean = true;
     public isDragging: boolean = false;
+    public waitingChallenge: boolean = false;
 
     constructor(scene, x, y, texture?, frame?) {
         super(scene, x, y, texture || Coin.defaultTextureName, frame);
@@ -31,7 +33,7 @@ export class Coin extends Phaser.GameObjects.Image {
 
             this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
             this.clearTint();
-            (this.scene as any).heroPlayer.addCoin(this);
+            (this.scene as any).heroPlayer.pushCoin(this);
         });
 
         this.on("pointerover", () => {
@@ -39,7 +41,7 @@ export class Coin extends Phaser.GameObjects.Image {
                 return;
             }
             this.scene.input.setDefaultCursor("url(assets/hand-move-no-grab.cur), pointer");
-            this.setTint(Coin.onHoverTint);
+            this.setTint(Constants.greenTint);
         });
 
         this.on("pointerout", () => {

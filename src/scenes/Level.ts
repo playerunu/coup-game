@@ -1,26 +1,26 @@
 import { Constants } from "../Constants";
 import { Coin } from "../game-objects/Coin";
-import { EnemyPlayer } from "../game-objects/EnemyPlayer";
-import { HeroPlayer } from "../game-objects/HeroPlayer";
-import {GameMessage} from "../core/GameMessage";
+import { TablePlayer } from "../game-objects/TablePlayer";
+import { GameMessage } from "../core/GameMessage";
 import { engine } from "../core/GameEngine";
 import { VsPlayerPanel } from "../game-objects/VsPlayerPanel";
+import { TakeCoinsPanel } from "../game-objects/TakeCoinsPanel";
 
 export class Level extends Phaser.Scene {
     private bankCoins: Coin[] = [];
-    public heroPlayer: HeroPlayer;
-    public enemyPlayers: EnemyPlayer[] = [];
+    public heroPlayer: TablePlayer;
+    public enemyPlayers: TablePlayer[] = [];
 
     private enemyPlayersXY = [
-        {x: -40, y: -400},
-        {x: -550, y: -60},
-        {x: +360, y: -60},
+        { x: -40, y: -400 },
+        { x: -550, y: -60 },
+        { x: +360, y: -60 },
     ];
 
     private vsPlayerPanelXY = [
-        {x: 0, y: 20},
-        {x: 0, y: 50},
-        {x: 0, y: 80},
+        { x: 0, y: 20 },
+        { x: 0, y: 50 },
+        { x: 0, y: 80 },
     ];
 
     create() {
@@ -51,8 +51,11 @@ export class Level extends Phaser.Scene {
             this.bankCoins.push(coin);
         }
 
+        const coinsPanel = new TakeCoinsPanel(this, baseWidth / 2, baseHeight / 2 -100);
+        this.add.existing(coinsPanel);
+
         // Place the hero player
-        this.heroPlayer = new HeroPlayer(engine.getHeroPlayer(), this, baseWidth / 2 - 40, baseHeight / 2 + 150);
+        this.heroPlayer = new TablePlayer(engine.getHeroPlayer(), this, baseWidth / 2 - 40, baseHeight / 2 + 150);
         this.add.existing(this.heroPlayer);
 
         let maxNameLength = Math.max(...engine.game.players.map(player => player.name.length), 0);
@@ -63,22 +66,22 @@ export class Level extends Phaser.Scene {
                 return;
             }
 
-            if (engine.isHeroPlayer(player)){
+            if (engine.isHeroPlayer(player)) {
                 return;
             }
 
             // Enemy player object
             let x = baseWidth / 2 + this.enemyPlayersXY[index].x;
             let y = baseHeight / 2 + this.enemyPlayersXY[index].y;
-            let enemyPlayer = new EnemyPlayer(player, this, x, y);
+            let enemyPlayer = new TablePlayer(player, this, x, y);
             this.add.existing(enemyPlayer);
-            this.enemyPlayers.push(enemyPlayer);    
+            this.enemyPlayers.push(enemyPlayer);
 
             // Vs player panel 
-            x = baseWidth - 200;
+            x = baseWidth - 230;
             y = 0 + this.vsPlayerPanelXY[index].y;
             let vsPlayerPanel = new VsPlayerPanel(player, maxNameLength, this, x, y);
-            vsPlayerPanel.setScale(0.5);
+            
             vsPlayerPanel.OnStealPointerOver = () => {
                 enemyPlayer.setTint();
             };
@@ -94,14 +97,14 @@ export class Level extends Phaser.Scene {
 
             this.add.existing(vsPlayerPanel);
         });
-        
+
         // Give the initial coins to each player
-        this.heroPlayer.addCoin(this.bankCoins.pop());
-        this.heroPlayer.addCoin(this.bankCoins.pop());
+        this.heroPlayer.pushCoin(this.bankCoins.pop());
+        this.heroPlayer.pushCoin(this.bankCoins.pop());
 
         for (let enemyPlayer of this.enemyPlayers) {
-            enemyPlayer.addCoin(this.bankCoins.pop());
-            enemyPlayer.addCoin(this.bankCoins.pop());
+            enemyPlayer.pushCoin(this.bankCoins.pop());
+            enemyPlayer.pushCoin(this.bankCoins.pop());
         }
     }
 

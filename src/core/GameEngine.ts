@@ -2,11 +2,11 @@ import {Game} from "../model/Game";
 import {Card} from "../model/Card";
 import {Influence} from "../model/Influence";
 import {Player} from "../model/Player";
-import {keyToString} from "../utils/keyToString";
+import {influenceToString} from "../model/Influence";
 import {deepMerge} from "../utils/deepMerge";
 
 export class GameEngine {
-    // Intial game state is empty, it will be populated by incremental updates from the back-end
+    // Intial game state is empty,  it will be populated by incremental updates from the back-end
     game: Game = { 
         players: [],
         currentPlayer: {},
@@ -89,6 +89,24 @@ export class GameEngine {
         }
 
         return heroPlayer;
+    }
+
+    getCardInfluencesStr(player: Player): {card1Img: string, card2Img: string} {
+        let card1Img: string;
+        let card2Img: string;
+        
+        if (engine.isHeroPlayer(player)){
+            card1Img = influenceToString(player.card1.influence);
+            card2Img = influenceToString(player.card2.influence);
+        } else {
+            card1Img = player.card1.isRevealed? influenceToString(player.card1.influence) : "back";
+            card2Img = player.card2.isRevealed? influenceToString(player.card2.influence) : "back";
+        }
+
+        return {
+            card1Img, 
+            card2Img
+        }
     }
 }
 

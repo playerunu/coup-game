@@ -34,18 +34,18 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
         // Player name
         this.playerDescription = scene.add.text(0, 0,
             this.playerName.padEnd(descriptionLength, " "),
-            { font: "32px Arial Black", fill: "#000" }
+            { font: "16px Arial Black", fill: "#000" }
         );
         this.add(this.playerDescription);
 
         // Card icons
-        const captainIcon = scene.add.image(250, -10, Influence[Influence.Captain].toLowerCase() + "-icon")
-            .setScale(0.7)
+        const captainIcon = scene.add.image(140, -10, Influence[Influence.Captain].toLowerCase() + "-icon")
+            .setScale(0.6)
             .setOrigin(0, 0)
             .setInteractive();
 
-        const assassinIcon = scene.add.image(250 + captainIcon.width + 3, -10, Influence[Influence.Assassin].toLowerCase() + "-icon")
-            .setScale(0.7)
+        const assassinIcon = scene.add.image(140 + captainIcon.width, -10, Influence[Influence.Assassin].toLowerCase() + "-icon")
+            .setScale(0.6)
             .setOrigin(0, 0)
             .setInteractive();
 
@@ -61,7 +61,7 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
         captainIcon.on("pointerout", () => {
             this.onStealPointerOut && this.onStealPointerOut();
             this.scene.input.setDefaultCursor("default");
-            captainIcon.setScale(0.7);
+            captainIcon.setScale(0.6);
         });
 
         assassinIcon.on("pointerover", () => {
@@ -73,7 +73,7 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
         assassinIcon.on("pointerout", () => {
             this.onAssassinatePointerOut && this.onAssassinatePointerOut();
             this.scene.input.setDefaultCursor("default");
-            assassinIcon.setScale(0.7);
+            assassinIcon.setScale(0.6);
         });
     }
 }

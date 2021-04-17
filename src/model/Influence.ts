@@ -5,3 +5,7 @@ export enum Influence {
     Contessa,
     Ambassador
 }
+
+export function influenceToString(influence) : string {
+    return Influence[influence].toLowerCase();
+}

@@ -18,9 +18,9 @@ export class Level extends Phaser.Scene {
     ];
 
     private vsPlayerPanelXY = [
-        {x: -0, y: 20},
-        {x: -0, y: 40},
-        {x: +0, y: 60},
+        {x: 0, y: 20},
+        {x: 0, y: 50},
+        {x: 0, y: 80},
     ];
 
     create() {
@@ -41,7 +41,6 @@ export class Level extends Phaser.Scene {
 
         Phaser.Display.Align.In.Center(table, background);
 
-
         // Put some random coins on the table
         for (let i = 0; i < engine.game.tableCoins; i++) {
             let x = Phaser.Math.Between(baseWidth / 2 - 80, baseWidth / 2 + 80);
@@ -56,7 +55,7 @@ export class Level extends Phaser.Scene {
         this.heroPlayer = new HeroPlayer(engine.getHeroPlayer(), this, baseWidth / 2 - 40, baseHeight / 2 + 150);
         this.add.existing(this.heroPlayer);
 
-        let maxPlayerLength = Math.max(...engine.game.players.map(player => player.name.length), 0);
+        let maxNameLength = Math.max(...engine.game.players.map(player => player.name.length), 0);
 
         // Place the enemy players and the vsPlayer panels
         engine.game.players.forEach((player, index) => {
@@ -68,19 +67,31 @@ export class Level extends Phaser.Scene {
                 return;
             }
 
+            // Enemy player object
             let x = baseWidth / 2 + this.enemyPlayersXY[index].x;
             let y = baseHeight / 2 + this.enemyPlayersXY[index].y;
             let enemyPlayer = new EnemyPlayer(player, this, x, y);
             this.add.existing(enemyPlayer);
             this.enemyPlayers.push(enemyPlayer);    
 
-            x = baseWidth - 300;
+            // Vs player panel 
+            x = baseWidth - 200;
             y = 0 + this.vsPlayerPanelXY[index].y;
-            let vsPlayerPanel = new VsPlayerPanel(player, maxPlayerLength, this, x, y);
+            let vsPlayerPanel = new VsPlayerPanel(player, maxNameLength, this, x, y);
             vsPlayerPanel.setScale(0.5);
-            vsPlayerPanel.OnStealPointerOver(() => {
+            vsPlayerPanel.OnStealPointerOver = () => {
                 enemyPlayer.setTint();
-            })
+            };
+            vsPlayerPanel.OnStealPointerOut = () => {
+                enemyPlayer.clearTint();
+            };
+            vsPlayerPanel.OnAssassinatePointerOver = () => {
+                enemyPlayer.setTint();
+            };
+            vsPlayerPanel.OnAssassinatePointerOut = () => {
+                enemyPlayer.clearTint();
+            };
+
             this.add.existing(vsPlayerPanel);
         });
         
@@ -92,8 +103,6 @@ export class Level extends Phaser.Scene {
             enemyPlayer.addCoin(this.bankCoins.pop());
             enemyPlayer.addCoin(this.bankCoins.pop());
         }
-
-        this.add.text(baseWidth - 200, 10, "Steal    Assassinate", { font: "16px Arial Black" });
     }
 
     onWsMessage(event) {

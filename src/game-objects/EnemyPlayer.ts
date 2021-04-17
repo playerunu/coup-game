@@ -68,5 +68,8 @@ export class EnemyPlayer extends Phaser.GameObjects.Container {
     setTint() {
         this.playerBackground.setTint(0x44ff44);
     }
-    
+
+    clearTint() {
+        this.playerBackground.clearTint();
+    }
 }

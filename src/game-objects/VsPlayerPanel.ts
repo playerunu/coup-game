@@ -1,63 +1,79 @@
-import { Coin } from "./Coin";
 import { Influence } from "../model/Influence";
 import { Player } from "../model/Player";
 
 export class VsPlayerPanel extends Phaser.GameObjects.Container {
-    private revealedCards: Influence[] = [];
-
     private playerName: string;
 
     private playerDescription: Phaser.GameObjects.Text;
-    private playerBackground: Phaser.GameObjects.Image;
 
-    static readonly COINS_STACK_HEIGHT: number = 40;
-    static readonly COIN_OFFSET: number = 20;
+    private onStealPointerOver: () => void;
+    set OnStealPointerOver(callback: () => void) {
+        this.onStealPointerOver = callback;
+    }
 
-    private onStealPointerOver : ()=>void;
+    private onStealPointerOut: () => void;
+    set OnStealPointerOut( callback: () => void) {
+        this.onStealPointerOut = callback;
+    }
+
+    private onAssassinatePointerOver: () => void;
+    set OnAssassinatePointerOver(callback: () => void) {
+        this.onAssassinatePointerOver = callback;
+    }
+
+    private onAssassinatePointerOut: () => void;
+    set OnAssassinatePointerOut( callback: () => void) {
+        this.onAssassinatePointerOut = callback;
+    }
 
     constructor(player: Player, descriptionLength, scene, x?, y?, children?) {
         super(scene, x, y, children);
 
-
-
-        // Player description background
-        //this.playerBackground = scene.add.image(0, card1.height - 3 + EnemyPlayer.COINS_STACK_HEIGHT, "playerBackground");
-        //this.add(this.playerBackground);
-
-        //this.playerBackground.setOrigin(0,0);
-
-        // Player text description area
-        this.playerDescription = scene.add.text(0, 0, "ceva", { font: "32px Arial Black", fill: "#000" });
-        this.add(this.playerDescription);
-
-        //Phaser.Display.Align.In.Center(this.playerDescription, this.playerBackground);
+        this.playerName = player.name;
 
         // Player name
-        this.playerName = player.name;
-        this.playerDescription.setText(this.playerName.padEnd(descriptionLength, " "));
-        // Cards
-        const card1 = scene.add.image(200, 0, Influence[Influence.Captain].toLowerCase()).setScale(0.6);
-        const card2 = scene.add.image(300 + card1.width + 40, 0, Influence[Influence.Assassin].toLowerCase()).setScale(0.6);
+        this.playerDescription = scene.add.text(0, 0,
+            this.playerName.padEnd(descriptionLength, " "),
+            { font: "32px Arial Black", fill: "#000" }
+        );
+        this.add(this.playerDescription);
 
-        this.add(card1);
-        this.add(card2);
+        // Card icons
+        const captainIcon = scene.add.image(250, -10, Influence[Influence.Captain].toLowerCase() + "-icon")
+            .setScale(0.7)
+            .setOrigin(0, 0)
+            .setInteractive();
 
-        card1.setOrigin(0, 0);
-        card2.setOrigin(0, 0);
+        const assassinIcon = scene.add.image(250 + captainIcon.width + 3, -10, Influence[Influence.Assassin].toLowerCase() + "-icon")
+            .setScale(0.7)
+            .setOrigin(0, 0)
+            .setInteractive();
 
-        card1.setInteractive();
-        card1.on("pointerover", () => {
-            this.onStealPointerOver();
-            card1.setTint(0x44ff44);
+        this.add(captainIcon);
+        this.add(assassinIcon);
+
+        captainIcon.on("pointerover", () => {
+            this.onStealPointerOver && this.onStealPointerOver();
+            this.scene.input.setDefaultCursor("pointer");
+            captainIcon.setScale(0.8);
         });
 
-        card1.on("pointerout", () => {
-            card1.clearTint();
+        captainIcon.on("pointerout", () => {
+            this.onStealPointerOut && this.onStealPointerOut();
+            this.scene.input.setDefaultCursor("default");
+            captainIcon.setScale(0.7);
+        });
+
+        assassinIcon.on("pointerover", () => {
+            this.onAssassinatePointerOver && this.onAssassinatePointerOver();
+            this.scene.input.setDefaultCursor("pointer");
+            assassinIcon.setScale(0.8);
+        });
+
+        assassinIcon.on("pointerout", () => {
+            this.onAssassinatePointerOut && this.onAssassinatePointerOut();
+            this.scene.input.setDefaultCursor("default");
+            assassinIcon.setScale(0.7);
         });
     }
-
-    OnStealPointerOver( callback ){
-        this.onStealPointerOver = callback;
-    }
-   
 }

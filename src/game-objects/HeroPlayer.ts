@@ -60,6 +60,7 @@ export class HeroPlayer extends Phaser.GameObjects.Container {
                 coin.setX(this.coins.length * HeroPlayer.COIN_OFFSET).setY(0);
                 this.coins.push(coin);
                 coin.isInBank = false;
+                coin.isDragging = false;
                 this.playerDescription.setText(this.playerName + "\n" + this.coins.length + " coins");
             }
         })

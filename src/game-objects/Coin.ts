@@ -3,7 +3,7 @@ export class Coin extends Phaser.GameObjects.Image {
     static readonly onHoverTint : number = 0x44ff44;
 
     public isInBank: boolean = true;
-    private isDragging: boolean = true;
+    public isDragging: boolean = false;
 
     constructor(scene, x, y, texture?, frame?) {
         super(scene, x, y, texture || Coin.defaultTextureName, frame);

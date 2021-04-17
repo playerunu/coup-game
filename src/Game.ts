@@ -3,8 +3,80 @@ import { Level } from "./scenes/Level";
 import { Boot } from "./scenes/Boot";
 import { Lobby } from "./scenes/Lobby";
 import { Constants } from "./Constants";
+import { engine } from "./core/GameEngine";
+
+export const debugGameData = {
+    "players": [
+        {
+            "name": "DauGherle",
+            "card1": {
+                "isRevealed": false
+            },
+            "card2": {
+                "isRevealed": false
+            },
+            "id": "",
+            "coins": 2,
+            "gamePostion": 1
+        },
+        {
+            "id": "",
+            "name": "Bombardieru",
+            "card1": {
+                "isRevealed": false
+            },
+            "card2": {
+                "isRevealed": false
+            },
+            "coins": 2,
+            "gamePostion": 2
+        },
+        {
+            "id": "",
+            "name": "DucuBertzi",
+            "card1": {
+                "isRevealed": false
+            },
+            "card2": {
+                "isRevealed": false
+            },
+            "coins": 2,
+            "gamePostion": 3
+        },
+        {
+            "id": "",
+            "name": "PLayer_unu",
+            "card1": {
+                "influence": 1,
+                "isRevealed": false
+            },
+            "card2": {
+                "influence": 2,
+                "isRevealed": false
+            },
+            "coins": 2,
+            "gamePostion": 0
+        }
+    ],
+    "currentPlayer": {
+        "id": "",
+        "name": "PLayer_unu",
+        "card1": {
+            "isRevealed": false
+        },
+        "card2": {
+            "isRevealed": false
+        },
+        "coins": 2,
+        "gamePostion": 0
+    },
+    "playerActions": [],
+    "tableCoins": 42
+};
 
 class Game {
+    public useDebugData = true;
+
     private readonly gameConfig = {
         width: Constants.gameWidth,
         height: Constants.gameHeight,
@@ -26,9 +98,21 @@ class Game {
     private init() {
         const game = new Phaser.Game(this.gameConfig);
 
-        game.scene.add("Boot", Boot, true);
-        game.scene.add("Lobby", Lobby);
-        game.scene.add("Level", Level);
+        game.events.on("ready", () => {
+            let nextScene = "Lobby";
+            if (this.useDebugData) {
+                engine.updateGame(debugGameData);
+                engine.heroPlayerName = "PLayer_unu";
+                nextScene = "Level";
+            }
+
+            let bootScene = game.scene.add("Boot", Boot);
+            game.scene.add("Lobby", Lobby);
+            game.scene.add("Level", Level);
+
+            (bootScene as any).nextScene = nextScene;
+            game.scene.start(bootScene);
+        });
     }
 }
 

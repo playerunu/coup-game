@@ -1,6 +1,7 @@
 export class Boot extends Phaser.Scene {
-	preload() {
+    public nextScene: string;
 
+    preload() {
 		this.load.pack("cards", "assets/cards.json");
 		this.load.pack("environment", "assets/environment.json");
         this.load.pack("buttons", "assets/buttons.json");
@@ -10,6 +11,6 @@ export class Boot extends Phaser.Scene {
 	}
 
 	create() {
-		this.scene.start("Lobby");
+		this.scene.start(this.nextScene);
 	}
 }

@@ -8,3 +8,7 @@ export type Player = {
     coins?: integer;
     gamePosition?: integer;
 }
+
+export function isEliminated(player: Player) {
+    return player.card1 && player.card1.isRevealed && player.card2 && player.card2.isRevealed;
+}

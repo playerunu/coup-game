@@ -18,6 +18,8 @@ export class GameEngine {
 
     public heroPlayerName: string;
     
+    // A pending player action is an action that awaits confirmation
+    // from the hero player (i.e. )
     public pendingPlayerAction: PlayerAction = null;
     private onPendingActionConfirm: () => void;
     set OnPendingActionConfirm(callback: () => void) {
@@ -156,6 +158,22 @@ export class GameEngine {
         return;
     }
 
+    waitingForAction() {
+        if (!this.game.currentPlayerAction && !this.pendingPlayerAction) {
+            return true;
+        }
+
+        return false;
+    }
+
+    waitingForActionConfirmation() {
+        if ((this.game.currentPlayerAction && this.game.currentPlayerAction.action.hasCounterAction) || this.pendingPlayerAction) {
+            return true;
+        }
+
+        return false;
+    }
+
     confirmPendingAction() {
         this.game.currentPlayerAction = this.pendingPlayerAction;
         this.pendingPlayerAction = null;
@@ -176,9 +194,9 @@ export class GameEngine {
             switch (this.game.currentPlayerAction.action.actionType) {
                 case (ActionType.TakeOneCoin):
                     return `${currentPlayerName} takes 1 coin`;
-                case (ActionType.TakeOneCoin):
+                case (ActionType.TakeTwoCoins):
                     return `${currentPlayerName} wants to take 2 coins`;
-                case (ActionType.TakeOneCoin):
+                case (ActionType.TakeThreeCoins):
                     return `${currentPlayerName} wants to take 3 coins`;
                 case (ActionType.Assasinate):
                     return `${currentPlayerName} wants to Assassinate ${vsPlayerName}`;

@@ -36,7 +36,7 @@ export class Coin extends Phaser.GameObjects.Image {
             
             this.isDragging = true;
             this.waitingChallenge = true;
-            (this.scene as any).heroPlayer.pushCoin(this, true);
+            (this.scene as any).HeroPlayer.pushCoin(this, true);
         });
 
         this.on("pointerover", () => {

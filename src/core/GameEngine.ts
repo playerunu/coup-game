@@ -19,7 +19,7 @@ export class GameEngine {
     public heroPlayerName: string;
     
     // A pending player action is an action that awaits confirmation
-    // from the hero player (i.e. )
+    // from the hero player (i.e. takeOne, takeTwo, takeThree)
     public pendingPlayerAction: PlayerAction = null;
     private onPendingActionConfirm: () => void;
     set OnPendingActionConfirm(callback: () => void) {
@@ -135,6 +135,26 @@ export class GameEngine {
         return true;
     }
 
+    steal(playerName: string) {
+        this.pendingPlayerAction = {
+            action: {
+                actionType: ActionType.Steal,
+                hasCounterAction: true,
+            },
+            vsPlayer: engine.getPlayerByName(playerName)
+        }
+    }
+    
+    assassinate(playerName: string) {
+        this.pendingPlayerAction = {
+            action: {
+                actionType: ActionType.Assassinate,
+                hasCounterAction: true,
+            },
+            vsPlayer: engine.getPlayerByName(playerName)
+        }
+    }
+
     takeCoin() {
         if (!this.pendingPlayerAction) {
             this.pendingPlayerAction = {
@@ -170,6 +190,22 @@ export class GameEngine {
         return false;
     }
 
+    waitingForTakeCoinsConfirmation() {
+        const pendingPlayerAction = this.pendingPlayerAction;
+
+        if (!pendingPlayerAction) {
+            return false;
+        }
+
+        if (pendingPlayerAction.action.actionType === ActionType.TakeOneCoin ||
+            pendingPlayerAction.action.actionType === ActionType.TakeTwoCoins 
+            || pendingPlayerAction.action.actionType === ActionType.TakeThreeCoins) {
+            return true;
+        }
+
+        return false;
+    }
+
     confirmPendingAction() {
         this.game.currentPlayerAction = this.pendingPlayerAction;
         this.pendingPlayerAction = null;
@@ -184,7 +220,7 @@ export class GameEngine {
 
     getCurrentActionText() : string {
         const currentPlayerName = this.game.currentPlayer.name;
-        const vsPlayerName = this.game.currentPlayerAction?.vsPlayer;
+        const vsPlayerName = this.game.currentPlayerAction?.vsPlayer.name;
 
         if (this.game.currentPlayerAction) {
             switch (this.game.currentPlayerAction.action.actionType) {
@@ -194,14 +230,29 @@ export class GameEngine {
                     return `${currentPlayerName} wants to take 2 coins`;
                 case (ActionType.TakeThreeCoins):
                     return `${currentPlayerName} wants to take 3 coins`;
-                case (ActionType.Assasinate):
+                case (ActionType.Assassinate):
                     return `${currentPlayerName} wants to Assassinate ${vsPlayerName}`;
                 case (ActionType.Steal):
                     return `${currentPlayerName} wants to Steal from ${vsPlayerName}`;
             }
-        } 
+        }
+        
+        if (this.pendingPlayerAction) {
+            switch (this.pendingPlayerAction.action.actionType) {
+                case (ActionType.TakeOneCoin):
+                    return "Confirm taking 1 coin";
+                case (ActionType.TakeTwoCoins):
+                    return "Confirm taking 2 coins";
+                case (ActionType.TakeThreeCoins):
+                    return "Confirm taking 3 coins";
+                case (ActionType.Steal):
+                    return `Steal from ${this.pendingPlayerAction?.vsPlayer.name}`;
+                case (ActionType.Assassinate):
+                    return `Assassinate ${this.pendingPlayerAction?.vsPlayer.name}`;
+            }
+        }
 
-        return "";
+        return this.game.currentPlayer.name + " turn";
     }
 }
 

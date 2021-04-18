@@ -3,7 +3,7 @@ export enum ActionType {
 	TakeTwoCoins,
 	TakeThreeCoins,
 	Exchange,
-	Assasinate,
+	Assassinate,
 	Steal
 }
 

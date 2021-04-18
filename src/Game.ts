@@ -42,7 +42,7 @@ export const debugGameData = {
             "card2": {
                 "isRevealed": false
             },
-            "coins": 10,
+            "coins": 2,
             "gamePosition": 3
         },
         {

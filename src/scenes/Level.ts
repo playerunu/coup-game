@@ -66,8 +66,7 @@ export class Level extends Phaser.Scene {
         Phaser.Display.Align.In.TopCenter(this.currentActionDescription, this.curentActionZone);
 
         // Coins panel
-        this.coinsPanel = new TakeCoinsPanel(this, halfWidth, halfHeight - 100);
-        this.coinsPanel.setVisible(false);
+        this.coinsPanel = new TakeCoinsPanel(this, halfWidth - 30, halfHeight - 120).setVisible(false);
         this.add.existing(this.coinsPanel);
 
         // Table players
@@ -75,17 +74,17 @@ export class Level extends Phaser.Scene {
     }
 
     // Refresh the game objects based on the current game state
-    update() {
+    update(time: any, delta: any) {
         const currentPlayer: TablePlayer = this.getCurrentTablePlayer();
 
         // Highlight the current player until he acts
         if (engine.waitingForAction()) {
             // Hero player tween is started after the vs panel tween finish
-            if (!this.currentPlayerTween && !engine.isHeroPlayer(currentPlayer.PlayerName)) {
-                this.currentPlayerTween = this.startCurrentPlayerTween();
+            if (!engine.isHeroPlayer(currentPlayer.PlayerName)) {
+                this.startCurrentPlayerTween();
             }
         } else {
-            this.currentPlayerTween.stop();
+            this.currentPlayerTween && this.currentPlayerTween.stop();
 
             if (engine.waitingForActionConfirmation()) {
                 this.getCurrentTablePlayer().setTint(Constants.yellowTint);
@@ -95,11 +94,21 @@ export class Level extends Phaser.Scene {
         }
 
         // Show/hide take coins panel buttons
-        this.coinsPanel.setVisible(!!engine.pendingPlayerAction);
+        this.coinsPanel.setVisible(engine.waitingForTakeCoinsConfirmation());
 
         // Update the current action description text
         this.currentActionDescription.setText(engine.getCurrentActionText());
         Phaser.Display.Align.In.TopCenter(this.currentActionDescription, this.curentActionZone);
+
+        // Update table players text
+        for (let player of this.tablePlayers) {
+            player.update();
+        }
+
+        // Update the vs player planels
+        for (let panel of this.vsPlayerPanels) {
+            panel.update();
+        }
     }
 
     onWsMessage(event) {
@@ -132,28 +141,39 @@ export class Level extends Phaser.Scene {
             }
 
             // For each active enemy player, add a vs player panel
-            x = Constants.gameWidth - 230;
-            // y = 0 + this.vsPlayerPanelXY[tableIndex - 1].y;
             let vsPlayerPanel = new VsPlayerPanel(player, this, Constants.gameWidth + 300, 0);
 
             vsPlayerPanel.OnStealPointerOver = () => {
                 tablePlayer.setTint(Constants.redTint);
+                engine.steal(player.name);
             };
             vsPlayerPanel.OnStealPointerOut = () => {
+                engine.cancelPendingAction();
                 tablePlayer.clearTint();
             };
+            vsPlayerPanel.OnStealPointerUp = () => {
+                engine.confirmPendingAction();
+                this.hideVsPlayerPanels();
+            };
+
             vsPlayerPanel.OnAssassinatePointerOver = () => {
                 tablePlayer.setTint(Constants.redTint);
+                engine.assassinate(player.name);
             };
             vsPlayerPanel.OnAssassinatePointerOut = () => {
+                engine.cancelPendingAction();
                 tablePlayer.clearTint();
+            };
+            vsPlayerPanel.OnAssassinatePointerUp  = () => {
+                engine.confirmPendingAction();
+                this.hideVsPlayerPanels();
             };
 
             this.add.existing(vsPlayerPanel);
             this.vsPlayerPanels.push(vsPlayerPanel);
         }
 
-        this.startVsPlayerPanelsTweens();
+        this.showVsPlayerPanels();
     }
 
     private getCurrentTablePlayer(): TablePlayer {
@@ -162,46 +182,63 @@ export class Level extends Phaser.Scene {
         return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName == currentPlayer.name);
     }
 
-    private startCurrentPlayerTween(): Phaser.Tweens.Tween {
-        return this.tweens.addCounter(
-            {
-                from: 0,
-                to: 100,
-                duration: 1000,
-                ease: Phaser.Math.Easing.Sine.InOut,
-                repeat: -1,
-                yoyo: true,
-                onUpdate: (tween) => {
-                    const value = tween.getValue();
-                    const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
-                        Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
-                        Phaser.Display.Color.ValueToColor(Constants.greenTint),
-                        100,
-                        value
-                    );
-                    const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
+    private startCurrentPlayerTween() {
+        if (this.currentPlayerTween) {
+            return;
+        }
 
-                    this.getCurrentTablePlayer().setTint(color);
-                },
-            }
-        )
+        this.currentPlayerTween = this.tweens.addCounter({
+            from: 0,
+            to: 100,
+            duration: 1000,
+            ease: Phaser.Math.Easing.Sine.InOut,
+            repeat: -1,
+            yoyo: true,
+            onUpdate: (tween) => {
+                const value = tween.getValue();
+                const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
+                    Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
+                    Phaser.Display.Color.ValueToColor(Constants.greenTint),
+                    100,
+                    value
+                );
+                const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
+
+                this.getCurrentTablePlayer().setTint(color);
+            },
+        });
     }
 
-    private startVsPlayerPanelsTweens() {
+    private showVsPlayerPanels() {
         let panelIndex = 0;
-        this.vsPlayerPanels.forEach((panel, index) => {
+        this.vsPlayerPanels.forEach((panel) => {
             if (!isEliminated(engine.getPlayerByName(panel.playerName))) {
                 panel.setY(this.vsPlayerPanelXY[panelIndex].y);
                 this.tweens.add({
                     targets: panel,
                     ease: "Back",
+                    delay: 500,
                     x: Constants.gameWidth - 230,
-                    duration: 2000,
+                    duration: 1500,
                     onComplete: () => {
-                        !this.currentPlayerTween && this.startCurrentPlayerTween();
+                        this.startCurrentPlayerTween();
                     }
                 })
                 panelIndex++;
+            }
+        })
+    }
+
+    private hideVsPlayerPanels() {
+        this.vsPlayerPanels.forEach((panel) => {
+            if (!isEliminated(engine.getPlayerByName(panel.playerName))) {
+                this.tweens.add({
+                    targets: panel,
+                    ease: "Back",
+                    //delay: 100,
+                    x: Constants.gameWidth + 300,
+                    duration: 4000                   
+                })
             }
         })
     }

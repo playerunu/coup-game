@@ -1,11 +1,17 @@
 import { Influence } from "../model/Influence";
 import { Player } from "../model/Player";
 import { Constants } from "../Constants";
+import { engine } from "../core/GameEngine";
 
 export class VsPlayerPanel extends Phaser.GameObjects.Container {
     public playerName: string;
 
     private playerDescription: Phaser.GameObjects.Text;
+    private captainIcon: Phaser.GameObjects.Image;
+    private assassinIcon: Phaser.GameObjects.Image;
+
+    static readonly INITIAL_SCALE: number = 0.6;
+    static readonly ON_HOVER_SCALE: number = 0.8;
 
     private onStealPointerOver: () => void;
     set OnStealPointerOver(callback: () => void) {
@@ -15,6 +21,11 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
     private onStealPointerOut: () => void;
     set OnStealPointerOut(callback: () => void) {
         this.onStealPointerOut = callback;
+    }
+
+    private onStealPointerUp: () => void;
+    set OnStealPointerUp(callback: () => void) {
+        this.onStealPointerUp = callback;
     }
 
     private onAssassinatePointerOver: () => void;
@@ -27,51 +38,64 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
         this.onAssassinatePointerOut = callback;
     }
 
+    private onAssassinatePointerUp: () => void;
+    set OnAssassinatePointerUp(callback: () => void) {
+        this.onAssassinatePointerUp = callback;
+    }
+
     constructor(player: Player, scene, x?, y?, children?) {
         super(scene, x, y, children);
 
         this.playerName = player.name;
 
         // Player name
-        this.playerDescription = scene.add.text(0, 0, this.playerName, Constants.defaultTextCss);
+        this.playerDescription = scene.add.text(0, 0, "vs " + this.playerName, Constants.defaultTextCss);
         this.add(this.playerDescription);
 
         // Card icons
-        const captainIcon = scene.add.image(140, -10, Influence[Influence.Captain].toLowerCase() + "-icon")
-            .setScale(0.6)
+        this.captainIcon = scene.add.image(140, -10, Influence[Influence.Captain].toLowerCase() + "-icon")
+            .setScale(VsPlayerPanel.INITIAL_SCALE)
             .setOrigin(0, 0)
             .setInteractive();
 
-        const assassinIcon = scene.add.image(140 + captainIcon.width, -10, Influence[Influence.Assassin].toLowerCase() + "-icon")
-            .setScale(0.6)
+        this.assassinIcon = scene.add.image(140 + this.captainIcon.width, -10, Influence[Influence.Assassin].toLowerCase() + "-icon")
+            .setScale(VsPlayerPanel.INITIAL_SCALE)
             .setOrigin(0, 0)
             .setInteractive();
 
-        this.add(captainIcon);
-        this.add(assassinIcon);
+        this.add(this.captainIcon);
+        this.add(this.assassinIcon);
 
-        captainIcon.on("pointerover", () => {
-            this.onStealPointerOver && this.onStealPointerOver();
-            this.scene.input.setDefaultCursor("pointer");
-            captainIcon.setScale(0.8);
-        });
+        this.addPointerEvent(this.captainIcon, "pointerover",() => this.onStealPointerOver(), VsPlayerPanel.ON_HOVER_SCALE, "pointer");
+        this.addPointerEvent(this.captainIcon, "pointerout",() => this.onStealPointerOut(), VsPlayerPanel.INITIAL_SCALE, "default");
+        this.addPointerEvent(this.captainIcon, "pointerdown", null, VsPlayerPanel.INITIAL_SCALE, "pointer");
+        this.addPointerEvent(this.captainIcon, "pointerup", () => this.onStealPointerUp(), VsPlayerPanel.INITIAL_SCALE, "pointer");
+        
+        this.addPointerEvent(this.assassinIcon, "pointerover",() => this.onAssassinatePointerOver(), VsPlayerPanel.ON_HOVER_SCALE, "pointer");
+        this.addPointerEvent(this.assassinIcon, "pointerout",() => this.onAssassinatePointerOut(), VsPlayerPanel.INITIAL_SCALE, "default");
+        this.addPointerEvent(this.assassinIcon, "pointerdown", null, VsPlayerPanel.INITIAL_SCALE, "pointer");
+        this.addPointerEvent(this.assassinIcon, "pointerup", () => this.onAssassinatePointerUp(), VsPlayerPanel.INITIAL_SCALE, "pointer");
+    }
 
-        captainIcon.on("pointerout", () => {
-            this.onStealPointerOut && this.onStealPointerOut();
-            this.scene.input.setDefaultCursor("default");
-            captainIcon.setScale(0.6);
-        });
+    update() {
+        if (engine.waitingForTakeCoinsConfirmation()) {
+            this.captainIcon.setAlpha(0.5);
+            this.assassinIcon.setAlpha(0.5);
+        } else {
+            this.captainIcon.clearAlpha();
+            this.assassinIcon.clearAlpha();
+        }
+    }
 
-        assassinIcon.on("pointerover", () => {
-            this.onAssassinatePointerOver && this.onAssassinatePointerOver();
-            this.scene.input.setDefaultCursor("pointer");
-            assassinIcon.setScale(0.8);
-        });
+    private addPointerEvent(icon, eventName, callback, scale, cursor) {
+        icon.on(eventName, () => {
+            if (engine.waitingForTakeCoinsConfirmation() || engine.) {
+                return;
+            }
 
-        assassinIcon.on("pointerout", () => {
-            this.onAssassinatePointerOut && this.onAssassinatePointerOut();
-            this.scene.input.setDefaultCursor("default");
-            assassinIcon.setScale(0.6);
+            callback && callback();
+            this.scene.input.setDefaultCursor(cursor);
+            icon.setScale(scale);
         });
     }
 }

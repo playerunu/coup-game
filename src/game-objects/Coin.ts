@@ -8,8 +8,14 @@ export class Coin extends Phaser.GameObjects.Image {
     public isDragging: boolean = false;
     public waitingChallenge: boolean = false;
 
+    public tableX: number;
+    public tableY: number;
+
     constructor(scene, x, y, texture?, frame?) {
         super(scene, x, y, texture || Coin.defaultTextureName, frame);
+
+        this.tableX = x;
+        this.tableY = y;
 
         this.setInteractive();
         this.setOrigin(0,0);

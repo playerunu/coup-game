@@ -1,5 +1,6 @@
 import { Influence } from "../model/Influence";
 import { Player } from "../model/Player";
+import { Constants } from "../Constants";
 
 export class VsPlayerPanel extends Phaser.GameObjects.Container {
     private playerName: string;
@@ -12,7 +13,7 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
     }
 
     private onStealPointerOut: () => void;
-    set OnStealPointerOut( callback: () => void) {
+    set OnStealPointerOut(callback: () => void) {
         this.onStealPointerOut = callback;
     }
 
@@ -22,7 +23,7 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
     }
 
     private onAssassinatePointerOut: () => void;
-    set OnAssassinatePointerOut( callback: () => void) {
+    set OnAssassinatePointerOut(callback: () => void) {
         this.onAssassinatePointerOut = callback;
     }
 
@@ -32,7 +33,7 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
         this.playerName = player.name;
 
         // Player name
-        this.playerDescription = scene.add.text(0, 0, this.playerName,{ font: "16px Arial Black", fill: "#000" });
+        this.playerDescription = scene.add.text(0, 0, this.playerName, Constants.defaultTextCss);
         this.add(this.playerDescription);
 
         // Card icons

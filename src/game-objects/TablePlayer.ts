@@ -33,7 +33,7 @@ export class TablePlayer extends Phaser.GameObjects.Container {
         this.playerBackground.setOrigin(0,0);
 
         // Player text description area
-        this.playerDescription = scene.add.text(0, 0, "ceva", { font: "16px Arial Black", fill: "#000" });
+        this.playerDescription = scene.add.text(0, 0, "ceva", Constants.defaultTextCss);
         this.add(this.playerDescription);
 
         Phaser.Display.Align.In.Center(this.playerDescription, this.playerBackground);
@@ -62,7 +62,7 @@ export class TablePlayer extends Phaser.GameObjects.Container {
                     coin.setTint(Constants.yellowTint);
                     engine.takeCoin();
                 }
-                this.playerDescription.setText(this.playerName + "\n" + this.coins.length + " coins");
+                this.playerDescription.setText(`${this.playerName}\n${this.coins.length} coins`);
             }
         })
     }
@@ -80,7 +80,7 @@ export class TablePlayer extends Phaser.GameObjects.Container {
                 coin.isDragging = false;
                 coin.waitingChallenge = false;
                 coin.clearTint();
-                this.playerDescription.setText(this.playerName + "\n" + this.coins.length + " coins");
+                this.playerDescription.setText(`${this.playerName}\n${this.coins.length} coins`);
             }
         })
     }
@@ -99,7 +99,7 @@ export class TablePlayer extends Phaser.GameObjects.Container {
 
     private setPlayerName(playerName:string) {
         this.playerName = playerName;
-        this.playerDescription.setText(this.playerName);
+        this.playerDescription.setText(`${this.playerName}\n${this.coins.length} coins`);
         Phaser.Display.Align.In.TopCenter(this.playerDescription, this.playerBackground);
     }
 

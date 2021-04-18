@@ -89,7 +89,7 @@ export class VsPlayerPanel extends Phaser.GameObjects.Container {
 
     private addPointerEvent(icon, eventName, callback, scale, cursor) {
         icon.on(eventName, () => {
-            if (engine.waitingForTakeCoinsConfirmation() || engine.) {
+            if (engine.waitingForTakeCoinsConfirmation()) {
                 return;
             }
 

@@ -2,12 +2,13 @@ import { Constants } from "../Constants";
 import { isEliminated } from "../model/Player";
 import { GameMessage } from "../core/GameMessage";
 import { engine } from "../core/GameEngine";
+import { WsScene } from "./WsScene";
 import { Coin } from "../game-objects/Coin";
 import { TablePlayer } from "../game-objects/TablePlayer";
 import { VsPlayerPanel } from "../game-objects/VsPlayerPanel";
 import { TakeCoinsPanel } from "../game-objects/TakeCoinsPanel";
 
-export class Level extends Phaser.Scene {
+export class Level extends WsScene {
     private bankCoins: Coin[] = [];
     private coinsPanel: TakeCoinsPanel;
     private currentPlayerTween: Phaser.Tweens.Tween;
@@ -71,6 +72,16 @@ export class Level extends Phaser.Scene {
 
         // Table players
         this.addTablePlayers();
+
+         // Set up sending current action to server on confirmation
+         engine.OnPendingActionConfirm = () => {
+            this.sendWsMessage({
+                messageType : GameMessage[GameMessage.HeroPlayerAction],
+                data : {
+                    currentPlayerAction: engine.game.currentPlayerAction
+                }
+            });
+        };
     }
 
     // Refresh the game objects based on the current game state
@@ -116,7 +127,9 @@ export class Level extends Phaser.Scene {
         console.log(message);
 
         switch (message.MessageType) {
-            case GameMessage[GameMessage.GameStarted]:
+            case GameMessage[GameMessage.PlayerAction]:
+                engine.updateGame(message.Data);
+                console.log(engine.game);
                 break;
         }
     }

@@ -33,6 +33,7 @@ export class Lobby extends WsScene {
         text.setOrigin(0.5, 0);
 
         let nameForm = this.add.dom(baseWidth / 2, baseHeight / 2).createFromCache("nameform");
+        let me = this;
 
         nameForm.addListener("click");
         nameForm.on("click", function (event) {
@@ -45,7 +46,7 @@ export class Lobby extends WsScene {
                     engine.heroPlayerName = inputText.value;
                     text.setText("Welcome " + engine.heroPlayerName);
                     gameTitle.setVisible(true);
-                    wsConnection.sendMessage({
+                    me.sendWsMessage({
                         messageType: GameMessage[GameMessage.PlayerJoined],
                         data: {
                             name: engine.heroPlayerName

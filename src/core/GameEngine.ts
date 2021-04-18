@@ -19,15 +19,14 @@ export class GameEngine {
     public heroPlayerName: string;
     
     // A pending player action is an action that awaits confirmation
-    // from the hero player (i.e. takeOne, takeTwo, takeThree)
     public pendingPlayerAction: PlayerAction = null;
-    private onPendingActionConfirm: () => void;
+    private onPendingConfirmCallbacks: (() => void)[] = [];
     set OnPendingActionConfirm(callback: () => void) {
-        this.onPendingActionConfirm = callback;
+        this.onPendingConfirmCallbacks.push(callback);
     }
-    private onPendingActionCancel: () => void;
+    private onPendingCancelCallbacks: (() => void)[] = [];
     set OnPendingActionCancel(callback: () => void) {
-        this.onPendingActionCancel = callback;
+        this.onPendingCancelCallbacks.push(callback);
     }
 
     updateGame(source: any) {
@@ -214,17 +213,22 @@ export class GameEngine {
         this.game.currentPlayerAction = this.pendingPlayerAction;
         this.pendingPlayerAction = null;
 
-        this.onPendingActionConfirm();
+        for (const callback of this.onPendingConfirmCallbacks) {
+            callback();
+        }
     }
 
     cancelPendingAction() {
         this.pendingPlayerAction = null;
-        this.onPendingActionCancel();
+        
+        for (const callback of this.onPendingCancelCallbacks) {
+            callback();
+        }
     }
 
     getCurrentActionText() : string {
         const currentPlayerName = this.game.currentPlayer.name;
-        const vsPlayerName = this.game.currentPlayerAction?.vsPlayer.name;
+        const vsPlayerName = this.game.currentPlayerAction?.vsPlayer?.name;
 
         if (this.game.currentPlayerAction) {
             switch (this.game.currentPlayerAction.action.actionType) {

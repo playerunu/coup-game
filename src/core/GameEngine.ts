@@ -88,21 +88,17 @@ export class GameEngine {
         this.updateGame({"players":[heroPlayer]});
     }
 
-    isHeroPlayer(player: Player){
-        return player.name == this.heroPlayerName;
+    isHeroPlayer(player: Player | string){
+        const playerName = (player as Player)?.name || player;
+        return playerName == this.heroPlayerName;
     }
 
     getHeroPlayer(): Player {
-        let heroPlayer: Player = null;
+        return this.game.players.find( player => this.isHeroPlayer(player));
+    }
 
-        for (const player of this.game.players) {
-            if (this.isHeroPlayer(player)){
-                heroPlayer = player;
-                break;
-            }
-        }
-
-        return heroPlayer;
+    getPlayerByName(name): Player {
+        return this.game.players.find( player => player.name === name);
     }
 
     getCardInfluencesStr(player: Player): {card1Img: string, card2Img: string} {

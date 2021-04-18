@@ -1,5 +1,5 @@
 import { Constants } from "../Constants";
-import { Player } from "../model/Player";
+import { isEliminated } from "../model/Player";
 import { GameMessage } from "../core/GameMessage";
 import { engine } from "../core/GameEngine";
 import { Coin } from "../game-objects/Coin";
@@ -15,6 +15,7 @@ export class Level extends Phaser.Scene {
     private curentActionZone: Phaser.GameObjects.Zone;
     private table: Phaser.GameObjects.Image;
     public tablePlayers: TablePlayer[] = [];
+    public vsPlayerPanels: VsPlayerPanel[] = [];
 
     get HeroPlayer() {
         return this.tablePlayers[0];
@@ -22,8 +23,8 @@ export class Level extends Phaser.Scene {
 
     private tablePlayersXY = [
         { x: -75, y: +150 },
-        { x: -75, y: -400 },
         { x: -550, y: -60 },
+        { x: -75, y: -400 },
         { x: +360, y: -60 },
     ];
 
@@ -62,6 +63,7 @@ export class Level extends Phaser.Scene {
         // Current action description
         this.curentActionZone = this.add.zone(0, 250, width, height).setOrigin(0, 0);
         this.currentActionDescription = this.add.text(0, 0, `${engine.game.currentPlayer.name} turn`, Constants.defaultTextCss);
+        Phaser.Display.Align.In.TopCenter(this.currentActionDescription, this.curentActionZone);
 
         // Coins panel
         this.coinsPanel = new TakeCoinsPanel(this, halfWidth, halfHeight - 100);
@@ -74,11 +76,12 @@ export class Level extends Phaser.Scene {
 
     // Refresh the game objects based on the current game state
     update() {
-        const currentTablePlayer: TablePlayer = this.getCurrentTablePlayer();
+        const currentPlayer: TablePlayer = this.getCurrentTablePlayer();
 
         // Highlight the current player until he acts
         if (engine.waitingForAction()) {
-            if (!this.currentPlayerTween) {
+            // Hero player tween is started after the vs panel tween finish
+            if (!this.currentPlayerTween && !engine.isHeroPlayer(currentPlayer.PlayerName)) {
                 this.currentPlayerTween = this.startCurrentPlayerTween();
             }
         } else {
@@ -94,7 +97,7 @@ export class Level extends Phaser.Scene {
         // Show/hide take coins panel buttons
         this.coinsPanel.setVisible(!!engine.pendingPlayerAction);
 
-        // Show/hide the current action description text
+        // Update the current action description text
         this.currentActionDescription.setText(engine.getCurrentActionText());
         Phaser.Display.Align.In.TopCenter(this.currentActionDescription, this.curentActionZone);
     }
@@ -110,7 +113,7 @@ export class Level extends Phaser.Scene {
     }
 
     private addTablePlayers() {
-        for  (let tableIndex = 0; tableIndex < engine.game.players.length; tableIndex++) {
+        for (let tableIndex = 0; tableIndex < engine.game.players.length; tableIndex++) {
             const player = engine.game.players.find((p => p.gamePosition === tableIndex));;
 
             let x = Constants.gameWidth / 2 + this.tablePlayersXY[tableIndex].x;
@@ -123,36 +126,39 @@ export class Level extends Phaser.Scene {
             for (let index = 0; index < player.coins; index++) {
                 tablePlayer.pushCoin(this.bankCoins.pop());
             }
-             
-            if (engine.isHeroPlayer(player)){
+
+            if (engine.isHeroPlayer(player)) {
                 continue;
             }
 
             // For each active enemy player, add a vs player panel
-             x = Constants.gameWidth - 230;
-             y = 0 + this.vsPlayerPanelXY[tableIndex - 1].y;
-             let vsPlayerPanel = new VsPlayerPanel(player, this, x, y);
- 
-             vsPlayerPanel.OnStealPointerOver = () => {
+            x = Constants.gameWidth - 230;
+            // y = 0 + this.vsPlayerPanelXY[tableIndex - 1].y;
+            let vsPlayerPanel = new VsPlayerPanel(player, this, Constants.gameWidth + 300, 0);
+
+            vsPlayerPanel.OnStealPointerOver = () => {
                 tablePlayer.setTint(Constants.redTint);
-             };
-             vsPlayerPanel.OnStealPointerOut = () => {
+            };
+            vsPlayerPanel.OnStealPointerOut = () => {
                 tablePlayer.clearTint();
-             };
-             vsPlayerPanel.OnAssassinatePointerOver = () => {
+            };
+            vsPlayerPanel.OnAssassinatePointerOver = () => {
                 tablePlayer.setTint(Constants.redTint);
-             };
-             vsPlayerPanel.OnAssassinatePointerOut = () => {
+            };
+            vsPlayerPanel.OnAssassinatePointerOut = () => {
                 tablePlayer.clearTint();
-             };
- 
-             this.add.existing(vsPlayerPanel);
+            };
+
+            this.add.existing(vsPlayerPanel);
+            this.vsPlayerPanels.push(vsPlayerPanel);
         }
+
+        this.startVsPlayerPanelsTweens();
     }
 
     private getCurrentTablePlayer(): TablePlayer {
         const currentPlayer = engine.game.currentPlayer;
-        
+
         return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName == currentPlayer.name);
     }
 
@@ -179,6 +185,25 @@ export class Level extends Phaser.Scene {
                 },
             }
         )
+    }
+
+    private startVsPlayerPanelsTweens() {
+        let panelIndex = 0;
+        this.vsPlayerPanels.forEach((panel, index) => {
+            if (!isEliminated(engine.getPlayerByName(panel.playerName))) {
+                panel.setY(this.vsPlayerPanelXY[panelIndex].y);
+                this.tweens.add({
+                    targets: panel,
+                    ease: "Back",
+                    x: Constants.gameWidth - 230,
+                    duration: 2000,
+                    onComplete: () => {
+                        !this.currentPlayerTween && this.startCurrentPlayerTween();
+                    }
+                })
+                panelIndex++;
+            }
+        })
     }
 }
 

@@ -3,7 +3,7 @@ import { Player } from "../model/Player";
 import { Constants } from "../Constants";
 
 export class VsPlayerPanel extends Phaser.GameObjects.Container {
-    private playerName: string;
+    public playerName: string;
 
     private playerDescription: Phaser.GameObjects.Text;
 

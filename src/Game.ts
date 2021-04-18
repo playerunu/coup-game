@@ -17,7 +17,7 @@ export const debugGameData = {
             },
             "id": "",
             "coins": 2,
-            "gamePostion": 1
+            "gamePosition": 1
         },
         {
             "id": "",
@@ -27,10 +27,11 @@ export const debugGameData = {
                 "isRevealed": true
             },
             "card2": {
-                "isRevealed": false
+                "influence": 3,
+                "isRevealed": true
             },
-            "coins": 2,
-            "gamePostion": 2
+            "coins": 0,
+            "gamePosition": 2
         },
         {
             "id": "",
@@ -41,8 +42,8 @@ export const debugGameData = {
             "card2": {
                 "isRevealed": false
             },
-            "coins": 2,
-            "gamePostion": 3
+            "coins": 10,
+            "gamePosition": 3
         },
         {
             "id": "",
@@ -56,7 +57,7 @@ export const debugGameData = {
                 "isRevealed": true
             },
             "coins": 2,
-            "gamePostion": 0
+            "gamePosition": 0
         }
     ],
     "currentPlayer": {
@@ -69,10 +70,10 @@ export const debugGameData = {
             "isRevealed": false
         },
         "coins": 2,
-        "gamePostion": 0
+        "gamePosition": 0
     },
     "playerActions": [],
-    "tableCoins": 42
+    "tableCoins": 44
 };
 
 class Game {

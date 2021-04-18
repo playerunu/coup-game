@@ -122,8 +122,13 @@ export class Level extends Phaser.Scene {
     }
 
     private addTablePlayers() {
-        for (let tableIndex = 0; tableIndex < engine.game.players.length; tableIndex++) {
-            const player = engine.game.players.find((p => p.gamePosition === tableIndex));;
+        let totalPlayers = engine.game.players.length;
+
+        for (let tableIndex = 0, gameIndex = engine.getHeroPlayer().gamePosition; 
+            tableIndex < engine.game.players.length; 
+            tableIndex++, gameIndex = (gameIndex + 1) % totalPlayers) {
+
+            const player = engine.game.players.find((p => p.gamePosition === gameIndex));
 
             let x = Constants.gameWidth / 2 + this.tablePlayersXY[tableIndex].x;
             let y = Constants.gameHeight / 2 + this.tablePlayersXY[tableIndex].y;
@@ -173,7 +178,7 @@ export class Level extends Phaser.Scene {
             this.vsPlayerPanels.push(vsPlayerPanel);
         }
 
-        this.showVsPlayerPanels();
+        engine.isHeroPlayerTurn() && this.showVsPlayerPanels();
     }
 
     private getCurrentTablePlayer(): TablePlayer {

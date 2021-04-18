@@ -93,6 +93,10 @@ export class GameEngine {
         return playerName == this.heroPlayerName;
     }
 
+    isHeroPlayerTurn() {
+        return this.game.currentPlayer.name === this.heroPlayerName;
+    }
+
     getHeroPlayer(): Player {
         return this.game.players.find( player => this.isHeroPlayer(player));
     }

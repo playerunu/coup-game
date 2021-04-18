@@ -77,12 +77,12 @@ export const debugGameData = {
 };
 
 class Game {
-    public useDebugData = true;
+    public useDebugData = false;
 
     private readonly gameConfig = {
         width: Constants.gameWidth,
         height: Constants.gameHeight,
-        parent: 'phaser-example',
+        parent: "phaser-example",
         type: Phaser.AUTO,
         dom: {
             createContainer: true

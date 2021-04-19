@@ -7,6 +7,7 @@ import { Coin } from "../game-objects/Coin";
 import { TablePlayer } from "../game-objects/TablePlayer";
 import { VsPlayerPanel } from "../game-objects/VsPlayerPanel";
 import { TakeCoinsPanel } from "../game-objects/TakeCoinsPanel";
+import { ActionType } from "../model/Action";
 
 export class Level extends WsScene {
     private bankCoins: Coin[] = [];
@@ -36,6 +37,8 @@ export class Level extends WsScene {
     ];
 
     create() {
+        super.create();
+
         const width = Constants.gameWidth;
         const height = Constants.gameHeight;
         const halfWidth = width / 2;
@@ -129,6 +132,24 @@ export class Level extends WsScene {
         switch (message.MessageType) {
             case GameMessage[GameMessage.PlayerAction]:
                 engine.updateGame(message.Data);
+                
+                // Here we need to make sure the visual game objects updates
+                // that require animations are taking place
+                let currentTablePlayer = this.getCurrentTablePlayer();
+                switch (engine.game.currentPlayerAction.action.actionType) {
+                    case ActionType.TakeOneCoin:
+                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        break;
+                    case ActionType.TakeTwoCoins:
+                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        break;
+                    case ActionType.TakeThreeCoins:
+                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        break;
+                }
                 console.log(engine.game);
                 break;
         }

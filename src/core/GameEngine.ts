@@ -12,6 +12,7 @@ export class GameEngine {
     game: Game = { 
         players: [],
         currentPlayer: {},
+        currentPlayerAction: undefined,
         playerActions: [],
         tableCoins: 0,
     }
@@ -33,8 +34,6 @@ export class GameEngine {
         let game = this.game;
 
         for (const key in source) {
-            // We use keyToString helper function here in order to force
-            // a strongly-typed check on each of the game keys 
             switch(key) {
                 case "players":
                     for (let player of source.players) {
@@ -48,6 +47,11 @@ export class GameEngine {
                         }
                     }
                     break;
+
+                case "currentPlayerAction":
+                    let currentAction = {}
+                    deepMerge(currentAction, source.currentPlayerAction);
+                    game.currentPlayerAction = currentAction
                 
                 case "currentPlayer":
                     deepMerge(game.currentPlayer, source.currentPlayer);

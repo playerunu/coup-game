@@ -72,7 +72,7 @@ export class Lobby extends WsScene {
         // });
     }
 
-    onWsMessage(event) {
+    protected onWsMessage(event) {
         const message = JSON.parse(event.data);
         console.log("Received game message:", message.Data);
 

@@ -13,13 +13,13 @@ export abstract class WsScene extends Phaser.Scene {
         wsConnection.addListener(this.OnWsMessage);
     }
 
-    abstract onWsMessage(event);
+    protected abstract onWsMessage(event);
 
-    sendWsMessage(message){
+    protected sendWsMessage(message){
         wsConnection.sendMessage(message);
     }
 
-    startScene(sceneName: string) {
+    protected startScene(sceneName: string) {
         wsConnection.removeListener(this.OnWsMessage);
         this.scene.start(sceneName);
     }

@@ -16,8 +16,11 @@ export class Level extends WsScene {
     private currentActionDescription: Phaser.GameObjects.Text;
     private curentActionZone: Phaser.GameObjects.Zone;
     private table: Phaser.GameObjects.Image;
-    public tablePlayers: TablePlayer[] = [];
-    public vsPlayerPanels: VsPlayerPanel[] = [];
+    private tablePlayers: TablePlayer[] = [];
+    private vsPlayerPanels: VsPlayerPanel[] = [];
+
+    private runningTween: false;
+    private pendingTweens: (()=>void)[];
 
     get HeroPlayer() {
         return this.tablePlayers[0];
@@ -30,12 +33,8 @@ export class Level extends WsScene {
         { x: +360, y: -60 },
     ];
 
-    private vsPlayerPanelXY = [
-        { x: 0, y: 20 },
-        { x: 0, y: 50 },
-        { x: 0, y: 80 },
-    ];
-
+    private vsPlayerPanelsY = [ 20, 50 , 80];
+        
     create() {
         super.create();
 
@@ -89,24 +88,6 @@ export class Level extends WsScene {
 
     // Refresh the game objects based on the current game state
     update(time: any, delta: any) {
-        const currentPlayer: TablePlayer = this.getCurrentTablePlayer();
-
-        // Highlight the current player until he acts
-        if (engine.waitingForAction()) {
-            // Hero player tween is started after the vs panel tween finish
-            if (!engine.isHeroPlayer(currentPlayer.PlayerName)) {
-                this.startCurrentPlayerTween();
-            }
-        } else {
-            this.currentPlayerTween && this.currentPlayerTween.stop();
-
-            if (engine.waitingForActionConfirmation()) {
-                this.getCurrentTablePlayer().setTint(Constants.yellowTint);
-            } else {
-                this.getCurrentTablePlayer().clearTint();
-            }
-        }
-
         // Show/hide take coins panel buttons
         this.coinsPanel.setVisible(engine.waitingForTakeCoinsConfirmation());
 
@@ -125,7 +106,7 @@ export class Level extends WsScene {
         }
     }
 
-    onWsMessage(event) {
+    protected onWsMessage(event) {
         const message = JSON.parse(event.data);
         console.log(message);
 
@@ -141,13 +122,10 @@ export class Level extends WsScene {
                         currentTablePlayer.pushCoin(this.bankCoins.pop());
                         break;
                     case ActionType.TakeTwoCoins:
-                        currentTablePlayer.pushCoin(this.bankCoins.pop());
-                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        [1,2].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
                         break;
                     case ActionType.TakeThreeCoins:
-                        currentTablePlayer.pushCoin(this.bankCoins.pop());
-                        currentTablePlayer.pushCoin(this.bankCoins.pop());
-                        currentTablePlayer.pushCoin(this.bankCoins.pop());
+                        [1,2,3].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
                         break;
                 }
                 console.log(engine.game);
@@ -221,6 +199,10 @@ export class Level extends WsScene {
         return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName == currentPlayer.name);
     }
 
+    private enqueueTween(callback:() => void) {
+        this.pendingTweens.push(callback);
+    }
+
     private startCurrentPlayerTween() {
         if (this.currentPlayerTween) {
             return;
@@ -234,25 +216,49 @@ export class Level extends WsScene {
             repeat: -1,
             yoyo: true,
             onUpdate: (tween) => {
-                const value = tween.getValue();
-                const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
-                    Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
-                    Phaser.Display.Color.ValueToColor(Constants.greenTint),
-                    100,
-                    value
-                );
-                const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
+                // const value = tween.getValue();
+                // const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
+                //     Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
+                //     Phaser.Display.Color.ValueToColor(Constants.greenTint),
+                //     100,
+                //     value
+                // );
+                // const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
 
-                this.getCurrentTablePlayer().setTint(color);
+                // this.getCurrentTablePlayer().setTint(color);
+
+                if (engine.waitingForAction()) {
+                    const value = tween.getValue();
+                    const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
+                        Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
+                        Phaser.Display.Color.ValueToColor(Constants.greenTint),
+                        100,
+                        value
+                    );
+                    const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
+    
+                    this.getCurrentTablePlayer().setTint(color);
+                } else {
+                    if (engine.waitingForActionConfirmation()) {
+                        this.getCurrentTablePlayer().setTint(Constants.yellowTint);
+                    } else {
+                        this.getCurrentTablePlayer().clearTint();
+                    }
+                }
             },
         });
+    }
+
+    private stopCurrentPlayerTween() {
+        this.currentPlayerTween && this.currentPlayerTween.stop();
+        this.currentPlayerTween = null;
     }
 
     private showVsPlayerPanels() {
         let panelIndex = 0;
         this.vsPlayerPanels.forEach((panel) => {
             if (!isEliminated(engine.getPlayerByName(panel.playerName))) {
-                panel.setY(this.vsPlayerPanelXY[panelIndex].y);
+                panel.setY(this.vsPlayerPanelsY[panelIndex]);
                 this.tweens.add({
                     targets: panel,
                     ease: "Back",

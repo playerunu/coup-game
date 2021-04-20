@@ -72,31 +72,31 @@ export const debugGameData = {
         "coins": 2,
         "gamePosition": 0
     },
-    "currentPlayerAction": {
-        "action": {
-          "actionType": 0,
-          "hasCounterAction": false
-        },
-        "vsPlayer": {
-          "id": "",
-          "name": "",
-          "card1": {
-            "isRevealed": false
-          },
-          "card2": {
-            "isRevealed": false
-          },
-          "coins": 0,
-          "gamePosition": 0
-        },
-        "counterActions": null
-    },
+    // "currentPlayerAction": {
+    //     "action": {
+    //       "actionType": 0,
+    //       "hasCounterAction": false
+    //     },
+    //     "vsPlayer": {
+    //       "id": "",
+    //       "name": "",
+    //       "card1": {
+    //         "isRevealed": false
+    //       },
+    //       "card2": {
+    //         "isRevealed": false
+    //       },
+    //       "coins": 0,
+    //       "gamePosition": 0
+    //     },
+    //     "counterActions": null
+    // },
     "playerActions": [],
     "tableCoins": 44
 };
 
 class Game {
-    public useDebugData = false;
+    public useDebugData = true;
 
     private readonly gameConfig = {
         width: Constants.gameWidth,

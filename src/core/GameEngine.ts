@@ -264,7 +264,7 @@ export class GameEngine {
             }
         }
 
-        return this.game.currentPlayer.name + " turn";
+        return this.game.currentPlayer.name + "'s turn";
     }
 }
 

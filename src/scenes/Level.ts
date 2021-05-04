@@ -19,7 +19,8 @@ export class Level extends WsScene {
     private tablePlayers: TablePlayer[] = [];
     private vsPlayerPanels: VsPlayerPanel[] = [];
 
-    private runningTween: false;
+    // Game updates tweens that need to run sequentially
+    private isTweenRunning: false;
     private pendingTweens: (()=>void)[];
 
     get HeroPlayer() {

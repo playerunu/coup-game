@@ -1,26 +1,27 @@
 import {Game} from "../model/Game";
 import {Card} from "../model/Card";
 import {Influence} from "../model/Influence";
+import {Action, canCounter} from "../model/Action";
 import {Player} from "../model/Player";
 import {influenceToString} from "../model/Influence";
 import {deepMerge} from "../utils/deepMerge";
 import { ActionType } from "../model/Action";
-import { PlayerAction } from "../model/PlayerAction";
+import { PlayerMove } from "../model/PlayerMove";
 
 export class GameEngine {
     // Intial game state is empty,  it will be populated by incremental updates from the back-end
     game: Game = { 
         players: [],
+        remainingPlayers: 0,
         currentPlayer: {},
-        currentPlayerAction: undefined,
-        playerActions: [],
+        currentMove: undefined,
         tableCoins: 0,
     }
 
     public heroPlayerName: string;
     
     // A pending player action is an action that awaits confirmation
-    public pendingPlayerAction: PlayerAction = null;
+    public pendingPlayerAction: PlayerMove = null;
     private onPendingConfirmCallbacks: (() => void)[] = [];
     set OnPendingActionConfirm(callback: () => void) {
         this.onPendingConfirmCallbacks.push(callback);
@@ -48,16 +49,12 @@ export class GameEngine {
                     }
                     break;
 
-                case "currentPlayerAction":
-                    let currentAction = {}
-                    deepMerge(currentAction, source.currentPlayerAction);
-                    game.currentPlayerAction = currentAction
-                
-                case "currentPlayer":
-                    deepMerge(game.currentPlayer, source.currentPlayer);
+                case "currentMove":
+                    game.currentMove = deepMerge({}, source.currentMove) as PlayerMove
                     break;
                 
-                case "playerActions":
+                case "currentPlayer":
+                    game.currentPlayer = deepMerge({}, source.currentPlayer);
                     break;
                 
                 case "tableCoins":
@@ -131,7 +128,7 @@ export class GameEngine {
             return false;
         }
 
-        if (this.game.currentPlayerAction) {
+        if (this.game.currentMove) {
             return false;
         }
 
@@ -146,7 +143,6 @@ export class GameEngine {
         this.pendingPlayerAction = {
             action: {
                 actionType: ActionType.Steal,
-                hasCounterAction: true,
             },
             vsPlayer: engine.getPlayerByName(playerName)
         }
@@ -156,7 +152,6 @@ export class GameEngine {
         this.pendingPlayerAction = {
             action: {
                 actionType: ActionType.Assassinate,
-                hasCounterAction: true,
             },
             vsPlayer: engine.getPlayerByName(playerName)
         }
@@ -167,13 +162,11 @@ export class GameEngine {
             this.pendingPlayerAction = {
                 action: {
                     actionType:ActionType.TakeOneCoin,
-                    hasCounterAction: false
                 }
             }
             return;
         } else if (this.pendingPlayerAction.action.actionType == ActionType.TakeOneCoin) {
             this.pendingPlayerAction.action.actionType = ActionType.TakeTwoCoins;
-            this.pendingPlayerAction.action.hasCounterAction = true;
         } else if (this.pendingPlayerAction.action.actionType == ActionType.TakeTwoCoins) {
             this.pendingPlayerAction.action.actionType = ActionType.TakeThreeCoins;
         }
@@ -182,7 +175,7 @@ export class GameEngine {
     }
 
     waitingForAction() {
-        if (!this.game.currentPlayerAction && !this.pendingPlayerAction) {
+        if (!this.game.currentMove && !this.pendingPlayerAction) {
             return true;
         }
 
@@ -190,7 +183,7 @@ export class GameEngine {
     }
 
     waitingForActionConfirmation() {
-        if ((this.game.currentPlayerAction && this.game.currentPlayerAction.action.hasCounterAction) || this.pendingPlayerAction) {
+        if ((this.game.currentMove && canCounter(this.game.currentMove.action)) || this.pendingPlayerAction) {
             return true;
         }
 
@@ -214,7 +207,7 @@ export class GameEngine {
     }
 
     confirmPendingAction() {
-        this.game.currentPlayerAction = this.pendingPlayerAction;
+        this.game.currentMove = this.pendingPlayerAction;
         this.pendingPlayerAction = null;
 
         for (const callback of this.onPendingConfirmCallbacks) {
@@ -232,10 +225,10 @@ export class GameEngine {
 
     getCurrentActionText() : string {
         const currentPlayerName = this.game.currentPlayer.name;
-        const vsPlayerName = this.game.currentPlayerAction?.vsPlayer?.name;
+        const vsPlayerName = this.game.currentMove?.vsPlayer?.name;
 
-        if (this.game.currentPlayerAction) {
-            switch (this.game.currentPlayerAction.action.actionType) {
+        if (this.game.currentMove) {
+            switch (this.game.currentMove.action.actionType) {
                 case (ActionType.TakeOneCoin):
                     return `${currentPlayerName} takes 1 coin`;
                 case (ActionType.TakeTwoCoins):

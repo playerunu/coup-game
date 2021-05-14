@@ -1,10 +1,15 @@
 export enum GameMessage {
-    // Client Messages
-    HeroPlayerAction,
-
-    // Server Messages
     PlayerJoined,
-    GameStarted,
-    YourCards,
-    PlayerAction
+	GameStarted,
+	YourCards,
+	Action,
+	ChallengeAction,
+	ChallenegeActionResult,
+	Block,
+	ChallengeBlock,
+	ChallengeBlockResult,
+	RevealCard,
+	ActionResult,
+	NextPlayer,
+	GameOver,
 } 

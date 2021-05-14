@@ -1,11 +1,12 @@
 import {Player} from "./Player";
 import {Card} from "./Card";
-import {PlayerAction} from "./PlayerAction";
+import {PlayerMove} from "./PlayerMove";
 
 export type Game = {
     players: Player[];
+    remainingPlayers: integer;
+    winner?: Player;
     currentPlayer: Player;
-    currentPlayerAction?: PlayerAction;
-    playerActions: PlayerAction[];
+    currentMove?: PlayerMove;
     tableCoins: integer;
 }

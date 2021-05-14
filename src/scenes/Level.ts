@@ -23,6 +23,8 @@ export class Level extends WsScene {
     private isTweenRunning: false;
     private pendingTweens: (()=>void)[];
 
+    private messages = []; 
+
     get HeroPlayer() {
         return this.tablePlayers[0];
     }
@@ -79,9 +81,9 @@ export class Level extends WsScene {
          // Set up sending current action to server on confirmation
          engine.OnPendingActionConfirm = () => {
             this.sendWsMessage({
-                messageType : GameMessage[GameMessage.HeroPlayerAction],
+                messageType : GameMessage[GameMessage.Action],
                 data : {
-                    currentPlayerAction: engine.game.currentPlayerAction
+                    currentMove: engine.game.currentMove
                 }
             });
         };
@@ -110,15 +112,16 @@ export class Level extends WsScene {
     protected onWsMessage(event) {
         const message = JSON.parse(event.data);
         console.log(message);
+        this.messages.push(message);
 
         switch (message.MessageType) {
-            case GameMessage[GameMessage.PlayerAction]:
+            case GameMessage[GameMessage.Action]:
                 engine.updateGame(message.Data);
                 
                 // Here we need to make sure the visual game objects updates
                 // that require animations are taking place
                 let currentTablePlayer = this.getCurrentTablePlayer();
-                switch (engine.game.currentPlayerAction.action.actionType) {
+                switch (engine.game.currentMove.action.actionType) {
                     case ActionType.TakeOneCoin:
                         currentTablePlayer.pushCoin(this.bankCoins.pop());
                         break;

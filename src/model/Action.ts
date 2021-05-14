@@ -1,13 +1,22 @@
+import { Influence } from "./Influence";
+
 export enum ActionType {
     TakeOneCoin, 
 	TakeTwoCoins,
 	TakeThreeCoins,
 	Exchange,
 	Assassinate,
-	Steal
+	Steal,
+	Coup
 }
 
 export type Action = {
     actionType: ActionType;
-    hasCounterAction: boolean;
+    canChallenge?: boolean;
+	canBlock?: boolean;
+	influence?: Influence;
 } 
+
+export function canCounter(action: Action) : boolean {
+	return action.canChallenge || action.canBlock;
+}

@@ -1,4 +1,4 @@
-import { engine } from "../core/GameEngine";
+import { engine } from "../../core/GameEngine";
 
 export class TakeCoinsPanel extends Phaser.GameObjects.Container {
     

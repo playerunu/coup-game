@@ -5,9 +5,10 @@ import {Challenge} from "./Challenge";
 
 export type PlayerMove = {
     action: Action;
+    finished?: boolean;
     waitingReveal?: boolean;
     waitingExchange?: boolean;
     vsPlayer?: Player;
-    challenged?: Challenge;
+    challenge?: Challenge;
     block?: Block;
 }

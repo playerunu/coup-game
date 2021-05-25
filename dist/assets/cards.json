@@ -60,6 +60,11 @@
                 "url": "assets/ambassador-icon.png",
                 "type": "image",
                 "key": "ambassador-icon"
+            },
+            {
+                "url": "assets/coup-icon.png",
+                "type": "image",
+                "key": "coup-icon"
             }
         ]
     },

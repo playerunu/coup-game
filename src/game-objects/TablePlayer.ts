@@ -68,20 +68,16 @@ export class TablePlayer extends Phaser.GameObjects.Container {
         })
     }
 
-    popCoin(coin: Coin) { 
-        this.scene.tweens.add({
-            targets: coin,
-            x:  coin.tableX,
-            y:  coin.tableY,
-            duration: 300,
-            onComplete: () => {
-                // Set bank coin properties
-                coin.isInBank = true;
-                coin.isDragging = false;
-                coin.waitingChallenge = false;
-                coin.clearTint();
+    popCoins(count: number, waitingChallenge?: boolean) {
+        let popped = 0;
+        for (let coin of this.coins) {
+            this.popCoin(coin);
+
+            popped++;
+            if (popped == count) {
+                break;
             }
-        })
+        }
     }
 
     update() {
@@ -125,6 +121,22 @@ export class TablePlayer extends Phaser.GameObjects.Container {
         if (player.card2.isRevealed) {
             this.card2.setAlpha(0.7);
         }
+    }
+
+    private popCoin(coin: Coin, waitingChallenge: boolean = false) { 
+        this.scene.tweens.add({
+            targets: coin,
+            x:  coin.tableX,
+            y:  coin.tableY,
+            duration: 300,
+            onComplete: () => {
+                // Set bank coin properties
+                coin.isInBank = true;
+                coin.isDragging = false;
+                coin.waitingChallenge = waitingChallenge;
+                coin.clearTint();
+            }
+        })
     }
 
     private setupCoinPanelActions() {

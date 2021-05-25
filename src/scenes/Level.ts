@@ -5,9 +5,10 @@ import { engine } from "../core/GameEngine";
 import { WsScene } from "./WsScene";
 import { Coin } from "../game-objects/Coin";
 import { TablePlayer } from "../game-objects/TablePlayer";
-import { VsPlayerPanel } from "../game-objects/VsPlayerPanel";
-import { TakeCoinsPanel } from "../game-objects/TakeCoinsPanel";
+import { TakeCoinsPanel } from "../game-objects/hero-player-panels/TakeCoinsPanel";
 import { ActionType } from "../model/Action";
+import { HeroPlayerPanel } from "../game-objects/hero-player-panels/HeroPlayerPanel";
+import { CounterActionPanel } from "../game-objects/counter-action-panels/CounterActionPanel";
 
 export class Level extends WsScene {
     private bankCoins: Coin[] = [];
@@ -15,15 +16,16 @@ export class Level extends WsScene {
     private currentPlayerTween: Phaser.Tweens.Tween;
     private currentActionDescription: Phaser.GameObjects.Text;
     private curentActionZone: Phaser.GameObjects.Zone;
+    private heroPlayerPanel: HeroPlayerPanel;
+    private counterActionPanel: CounterActionPanel;
     private table: Phaser.GameObjects.Image;
     private tablePlayers: TablePlayer[] = [];
-    private vsPlayerPanels: VsPlayerPanel[] = [];
 
     // Game updates tweens that need to run sequentially
     private isTweenRunning: false;
-    private pendingTweens: (()=>void)[];
+    private pendingTweens: (() => void)[];
 
-    private messages = []; 
+    private messages = [];
 
     get HeroPlayer() {
         return this.tablePlayers[0];
@@ -36,8 +38,6 @@ export class Level extends WsScene {
         { x: +360, y: -60 },
     ];
 
-    private vsPlayerPanelsY = [ 20, 50 , 80];
-        
     create() {
         super.create();
 
@@ -75,18 +75,29 @@ export class Level extends WsScene {
         this.coinsPanel = new TakeCoinsPanel(this, halfWidth - 30, halfHeight - 120).setVisible(false);
         this.add.existing(this.coinsPanel);
 
+        // Hero player panel
+        this.addHeroPlayerPanel();
+
+        // Counter action panel
+        this.addCounterActionPanel();
+
         // Table players
         this.addTablePlayers();
 
-         // Set up sending current action to server on confirmation
-         engine.OnPendingActionConfirm = () => {
+        // Set up sending current action to server on confirmation
+        engine.OnPendingActionConfirm = () => {
+            this.hidePanel(this.heroPlayerPanel);
             this.sendWsMessage({
-                messageType : GameMessage[GameMessage.Action],
-                data : {
+                messageType: GameMessage[GameMessage.Action],
+                data: {
                     currentMove: engine.game.currentMove
                 }
             });
         };
+
+        this.startCurrentPlayerTween();
+
+        this.nextPlayer();
     }
 
     // Refresh the game objects based on the current game state
@@ -103,45 +114,74 @@ export class Level extends WsScene {
             player.update();
         }
 
-        // Update the vs player planels
-        for (let panel of this.vsPlayerPanels) {
-            panel.update();
-        }
+        // Update the hero player panel
+        this.heroPlayerPanel.update();
     }
 
     protected onWsMessage(event) {
         const message = JSON.parse(event.data);
         console.log(message);
         this.messages.push(message);
+        engine.updateGame(message.Data);
 
         switch (message.MessageType) {
+            
             case GameMessage[GameMessage.Action]:
-                engine.updateGame(message.Data);
-                
-                // Here we need to make sure the visual game objects updates
-                // that require animations are taking place
                 let currentTablePlayer = this.getCurrentTablePlayer();
                 switch (engine.game.currentMove.action.actionType) {
                     case ActionType.TakeOneCoin:
                         currentTablePlayer.pushCoin(this.bankCoins.pop());
                         break;
                     case ActionType.TakeTwoCoins:
-                        [1,2].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
+                        [1, 2].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
                         break;
                     case ActionType.TakeThreeCoins:
-                        [1,2,3].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
+                        [1, 2, 3].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
                         break;
+                    case ActionType.Assassinate:
+                        currentTablePlayer.popCoins(3, true);
+                    case ActionType.Coup:
+                        currentTablePlayer.popCoins(7, false);
                 }
+                
+                if (engine.canChallengeMove() || engine.canBlockMove()) {
+                    this.showPanel(this.counterActionPanel);
+                }
+
                 console.log(engine.game);
                 break;
+            case GameMessage[GameMessage.ActionResult]:
+                break;
+            case GameMessage[GameMessage.ChallengeAction]:
+            case GameMessage[GameMessage.ChallengeBlock]:
+                this.hidePanel(this.counterActionPanel);
+                break;
+            case GameMessage[GameMessage.ChallengeBlockResult]:
+            case GameMessage[GameMessage.ChallengeActionResult]:
+                break;
+            case GameMessage[GameMessage.Block]:
+                this.showPanel(this.counterActionPanel);
+                break;
+            case GameMessage[GameMessage.WaitingReveal]:
+                break;
+            case GameMessage[GameMessage.WaitingExchange]:
+                break;
+            case GameMessage[GameMessage.ExchangeComplete]:
+                break;
+            case GameMessage[GameMessage.NextPlayer]:
+                this.nextPlayer();
+                break;
+            case GameMessage[GameMessage.GameOver]:
+                break;
+
         }
     }
 
     private addTablePlayers() {
         let totalPlayers = engine.game.players.length;
 
-        for (let tableIndex = 0, gameIndex = engine.getHeroPlayer().gamePosition; 
-            tableIndex < engine.game.players.length; 
+        for (let tableIndex = 0, gameIndex = engine.getHeroPlayer().gamePosition;
+            tableIndex < engine.game.players.length;
             tableIndex++, gameIndex = (gameIndex + 1) % totalPlayers) {
 
             const player = engine.game.players.find((p => p.gamePosition === gameIndex));
@@ -160,41 +200,81 @@ export class Level extends WsScene {
             if (engine.isHeroPlayer(player)) {
                 continue;
             }
-
-            // For each active enemy player, add a vs player panel
-            let vsPlayerPanel = new VsPlayerPanel(player, this, Constants.gameWidth + 300, 0);
-
-            vsPlayerPanel.OnStealPointerOver = () => {
-                tablePlayer.setTint(Constants.redTint);
-                engine.steal(player.name);
-            };
-            vsPlayerPanel.OnStealPointerOut = () => {
-                engine.cancelPendingAction();
-                tablePlayer.clearTint();
-            };
-            vsPlayerPanel.OnStealPointerUp = () => {
-                engine.confirmPendingAction();
-                this.hideVsPlayerPanels();
-            };
-
-            vsPlayerPanel.OnAssassinatePointerOver = () => {
-                tablePlayer.setTint(Constants.redTint);
-                engine.assassinate(player.name);
-            };
-            vsPlayerPanel.OnAssassinatePointerOut = () => {
-                engine.cancelPendingAction();
-                tablePlayer.clearTint();
-            };
-            vsPlayerPanel.OnAssassinatePointerUp  = () => {
-                engine.confirmPendingAction();
-                this.hideVsPlayerPanels();
-            };
-
-            this.add.existing(vsPlayerPanel);
-            this.vsPlayerPanels.push(vsPlayerPanel);
         }
 
-        engine.isHeroPlayerTurn() && this.showVsPlayerPanels();
+        //engine.isHeroPlayerTurn() && this.showPanel(this.heroPlayerPanel);
+    }
+
+    private addHeroPlayerPanel() {
+        this.heroPlayerPanel = new HeroPlayerPanel(this, Constants.gameWidth + 300, 0);
+        this.heroPlayerPanel.onPointerOver = (actionType, vsPlayer) => {
+            if (vsPlayer) {
+                const tablePlayer = this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName == vsPlayer.name)
+                tablePlayer.setTint(Constants.redTint);
+            }
+
+            switch (actionType) {
+                case ActionType.Steal:
+                    engine.steal(vsPlayer.name);
+                    break;
+                case ActionType.Assassinate:
+                    engine.assassinate(vsPlayer.name);
+                    break;
+                case ActionType.Coup:
+                    engine.coup(vsPlayer.name);
+                    break;
+                case ActionType.Exchange:
+                    engine.exchange();
+                    break;
+            }
+        }
+        this.heroPlayerPanel.onPointerOut = (vsPlayer) => {
+            if (vsPlayer) {
+                const tablePlayer = this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName == vsPlayer.name)
+                tablePlayer.clearTint();
+            }
+
+            engine.cancelPendingAction();
+        }
+
+        this.heroPlayerPanel.onPointerUp = () => {
+            engine.confirmPendingAction();
+            this.hidePanel(this.heroPlayerPanel);
+        }
+
+        this.add.existing(this.heroPlayerPanel);
+    }
+
+    private addCounterActionPanel() {
+        this.counterActionPanel = new CounterActionPanel(this, Constants.gameWidth + 300, 0);
+
+        this.counterActionPanel.onPointerOver = (actionType, influence) => {
+            switch (actionType) {
+                case ActionType.Block:
+                    engine.block(influence);
+                    break;
+                case ActionType.Challenge:
+                    engine.challenge();
+                    break;
+            }
+        }
+
+        this.counterActionPanel.onPointerOut = () => {
+            engine.cancelPendingAction();
+
+        }
+
+        this.counterActionPanel.onPointerUp = () => {
+            engine.confirmPendingAction();
+        }
+
+        this.add.existing(this.counterActionPanel);
+    }
+
+    private nextPlayer() {
+        if (engine.isHeroPlayerTurn()) {
+            this.showPanel(this.heroPlayerPanel);
+        }
     }
 
     private getCurrentTablePlayer(): TablePlayer {
@@ -203,7 +283,7 @@ export class Level extends WsScene {
         return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName == currentPlayer.name);
     }
 
-    private enqueueTween(callback:() => void) {
+    private enqueueTween(callback: () => void) {
         this.pendingTweens.push(callback);
     }
 
@@ -220,18 +300,7 @@ export class Level extends WsScene {
             repeat: -1,
             yoyo: true,
             onUpdate: (tween) => {
-                // const value = tween.getValue();
-                // const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
-                //     Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
-                //     Phaser.Display.Color.ValueToColor(Constants.greenTint),
-                //     100,
-                //     value
-                // );
-                // const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
-
-                // this.getCurrentTablePlayer().setTint(color);
-
-                if (engine.waitingForAction()) {
+                if (engine.waitingPlayerMove()) {
                     const value = tween.getValue();
                     const colorObject = Phaser.Display.Color.Interpolate.ColorWithColor(
                         Phaser.Display.Color.ValueToColor(Constants.darkGreenTint),
@@ -240,10 +309,10 @@ export class Level extends WsScene {
                         value
                     );
                     const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
-    
+
                     this.getCurrentTablePlayer().setTint(color);
                 } else {
-                    if (engine.waitingForActionConfirmation()) {
+                    if (engine.pendingHeroPlayerMove) {
                         this.getCurrentTablePlayer().setTint(Constants.yellowTint);
                     } else {
                         this.getCurrentTablePlayer().clearTint();
@@ -258,37 +327,25 @@ export class Level extends WsScene {
         this.currentPlayerTween = null;
     }
 
-    private showVsPlayerPanels() {
-        let panelIndex = 0;
-        this.vsPlayerPanels.forEach((panel) => {
-            if (!isEliminated(engine.getPlayerByName(panel.playerName))) {
-                panel.setY(this.vsPlayerPanelsY[panelIndex]);
-                this.tweens.add({
-                    targets: panel,
-                    ease: "Back",
-                    delay: 500,
-                    x: Constants.gameWidth - 230,
-                    duration: 1500,
-                    onComplete: () => {
-                        this.startCurrentPlayerTween();
-                    }
-                })
-                panelIndex++;
-            }
-        })
+    private showPanel(panel: Phaser.GameObjects.GameObject) {
+        this.tweens.add({
+            targets: panel,
+            ease: "Back",
+            delay: 500,
+            x: Constants.gameWidth - 270,
+            duration: 1500,
+            // onComplete: () => {
+            //     this.startCurrentPlayerTween();
+            // }
+        });
     }
 
-    private hideVsPlayerPanels() {
-        this.vsPlayerPanels.forEach((panel) => {
-            if (!isEliminated(engine.getPlayerByName(panel.playerName))) {
-                this.tweens.add({
-                    targets: panel,
-                    ease: "Back",
-                    //delay: 100,
-                    x: Constants.gameWidth + 300,
-                    duration: 4000                   
-                })
-            }
+    private hidePanel(panel: Phaser.GameObjects.GameObject) {
+        this.tweens.add({
+            targets: panel,
+            ease: "Back",
+            x: Constants.gameWidth + 300,
+            duration: 4000
         })
     }
 }

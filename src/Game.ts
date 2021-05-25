@@ -5,98 +5,152 @@ import { Lobby } from "./scenes/Lobby";
 import { Constants } from "./Constants";
 import { engine } from "./core/GameEngine";
 
-export const debugGameData = {
+export const debugGameData2 = {
     "players": [
+        {
+          "name": "PLayer_unu",
+          "card1": {
+            "influence": 1,
+            "isRevealed": false
+          },
+          "card2": {
+            "influence": 4,
+            "isRevealed": false
+          },
+          "coins": 8,
+          "gamePosition": 0
+        },
+        {
+          "name": "Serif",
+          "card1": {
+            "isRevealed": false
+          },
+          "card2": {
+            "isRevealed": false
+          },
+          "coins": 2,
+          "gamePosition": 1
+        },
         {
             "name": "DauGherle",
             "card1": {
-                "isRevealed": false
+              "isRevealed": false
             },
             "card2": {
-                "isRevealed": false
+              "isRevealed": false
             },
-            "id": "",
             "coins": 2,
-            "gamePosition": 1
-        },
-        {
-            "id": "",
-            "name": "Bombardieru",
-            "card1": {
-                "influence": 2,
-                "isRevealed": true
-            },
-            "card2": {
-                "influence": 3,
-                "isRevealed": true
-            },
-            "coins": 0,
             "gamePosition": 2
-        },
-        {
-            "id": "",
+          },
+          {
             "name": "DucuBertzi",
             "card1": {
-                "isRevealed": false
+              "isRevealed": false
             },
             "card2": {
-                "isRevealed": false
+              "isRevealed": false
             },
             "coins": 2,
             "gamePosition": 3
-        },
-        {
-            "id": "",
-            "name": "PLayer_unu",
-            "card1": {
-                "influence": 0,
-                "isRevealed": false
-            },
-            "card2": {
-                "influence": 4,
-                "isRevealed": true
-            },
-            "coins": 2,
-            "gamePosition": 0
-        }
-    ],
-    "currentPlayer": {
-        "id": "",
-        "name": "PLayer_unu",
+          }
+      ],
+      "remainingPlayers": 0,
+      "currentPlayer": {
+        "name": "Serif",
         "card1": {
-            "isRevealed": false
+          "isRevealed": false
         },
         "card2": {
-            "isRevealed": false
+          "isRevealed": false
         },
         "coins": 2,
         "gamePosition": 0
-    },
-    // "currentPlayerAction": {
-    //     "action": {
-    //       "actionType": 0,
-    //       "hasCounterAction": false
-    //     },
-    //     "vsPlayer": {
-    //       "id": "",
-    //       "name": "",
-    //       "card1": {
-    //         "isRevealed": false
+      },
+    //   "currentMove" : {
+    //       "action" : {
+    //         "actionType" : 5
     //       },
-    //       "card2": {
-    //         "isRevealed": false
-    //       },
-    //       "coins": 0,
-    //       "gamePosition": 0
-    //     },
-    //     "counterActions": null
-    // },
-    "playerActions": [],
-    "tableCoins": 44
+    //       "vsPlayer" : {
+    //         "name": "DauGherle",
+    //         "card1": {
+    //           "isRevealed": false
+    //         },
+    //         "card2": {
+    //           "isRevealed": false
+    //         },
+    //         "coins": 2,
+    //         "gamePosition": 2
+    //       }
+    //   },
+      "tableCoins": 46
+};
+
+export const debugGameData = {
+    "players": [
+        {
+          "name": "PLayer_unu",
+          "card1": {
+            "influence": 1,
+            "isRevealed": false
+          },
+          "card2": {
+            "influence": 4,
+            "isRevealed": false
+          },
+          "coins": 8,
+          "gamePosition": 0
+        },
+        {
+          "name": "Serif",
+          "card1": {
+            "isRevealed": false
+          },
+          "card2": {
+            "isRevealed": false
+          },
+          "coins": 2,
+          "gamePosition": 1
+        },
+        {
+            "name": "DauGherle",
+            "card1": {
+              "isRevealed": false
+            },
+            "card2": {
+              "isRevealed": false
+            },
+            "coins": 2,
+            "gamePosition": 2
+          },
+          {
+            "name": "DucuBertzi",
+            "card1": {
+              "isRevealed": false
+            },
+            "card2": {
+              "isRevealed": false
+            },
+            "coins": 2,
+            "gamePosition": 3
+          }
+      ],
+      "remainingPlayers": 0,
+      "currentPlayer": {
+        "name": "PLayer_unu",
+        "card1": {
+          "isRevealed": false
+        },
+        "card2": {
+          "isRevealed": false
+        },
+        "coins": 2,
+        "gamePosition": 0
+      },
+      "tableCoins": 46
 };
 
 class Game {
-    public useDebugData = false;
+    public useDebugData = true;
 
     private readonly gameConfig = {
         width: Constants.gameWidth,

@@ -34,6 +34,10 @@ export class GameEngine {
     updateGame(source: any) {
         let game = this.game;
 
+        if (!("currentMove" in source)) {
+            game.currentMove = null
+        }
+
         for (const key in source) {
             switch (key) {
                 case "players":

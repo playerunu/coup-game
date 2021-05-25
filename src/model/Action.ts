@@ -7,7 +7,9 @@ export enum ActionType {
 	Exchange,
 	Assassinate,
 	Steal,
-	Coup
+	Coup,
+    Block,
+    Challenge
 }
 
 export type Action = {

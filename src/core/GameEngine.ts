@@ -2,11 +2,13 @@ import { Game } from "../model/Game";
 import { Card } from "../model/Card";
 import { Influence } from "../model/Influence";
 import { Action, canCounter } from "../model/Action";
+import { Block } from "../model/Block";
 import { Player } from "../model/Player";
 import { influenceToString } from "../model/Influence";
 import { deepMerge } from "../utils/deepMerge";
 import { ActionType } from "../model/Action";
 import { PlayerMove } from "../model/PlayerMove";
+import { GameMessage } from "./GameMessage";
 
 export class GameEngine {
     // Intial game state is empty,  it will be populated by incremental updates from the back-end
@@ -30,6 +32,8 @@ export class GameEngine {
     set OnPendingActionCancel(callback: () => void) {
         this.onPendingCancelCallbacks.push(callback);
     }
+
+    public pendingCounter = null;
 
     updateGame(source: any) {
         let game = this.game;
@@ -155,25 +159,38 @@ export class GameEngine {
         return engine.game.currentMove?.finished;
     }
 
+    canCounter() : boolean {
+        return this.canChallengeMove() || this.canBlockMove();
+    }
+
     canChallengeMove() : boolean {
         if (this.isMoveFinished()) {
             return false;
         }
+
+        if (this.isHeroPlayerTurn()) {
+            return false;
+        }
         
         // Check if the current action can be challenged
-        if (engine.game.currentMove?.action.canChallenge && 
-            // Check if nobody challenged it yet
-            !engine.game.currentMove.challenge && 
-            // Blocked actions cannot be challenged anymore
-            !engine.game.currentMove.block) 
-        {
+        if (engine.game.currentMove) {
+            if (engine.game.currentMove.action.canChallenge && 
+                // Check if nobody challenged it yet
+                !engine.game.currentMove.challenge && 
+                // Blocked actions cannot be challenged anymore
+                !engine.game.currentMove.block) 
+            {
                 return true;
-        }
-
-        // Check if the block action can be challenged
-        if (!engine.game.currentMove?.block?.challenge) {
-            return true;
-
+            }
+    
+            // Check if the block action can be challenged
+            if (engine.game.currentMove.block && 
+                !engine.game.currentMove.block.challenge &&
+                // Can challenge only if the block was made by someone else
+                !engine.isHeroPlayer(engine.game.currentMove.block.player.name)) 
+            {
+                return true;
+            }
         }
         
         return false;
@@ -183,9 +200,15 @@ export class GameEngine {
         if (this.isMoveFinished()) {
             return false;
         }
+
+        if (this.isHeroPlayerTurn()) {
+            return false;
+        }
         
-        if (engine.game.currentMove?.action.canBlock && !engine.game.currentMove.block){
-            return true;
+        if (engine.game.currentMove) {
+            if (engine.game.currentMove.action.canBlock && !engine.game.currentMove.block){
+                return true;
+            }
         }
 
         return false;
@@ -244,11 +267,39 @@ export class GameEngine {
     }
 
     block(pretendingInfluence: Influence) {
+        let counter = this.game.currentMove;
+        counter.block = { 
+            player : this.getHeroPlayer(),
+            pretendingInfluence,
+        }
 
+        this.pendingCounter = {
+            pretendingInfluence : pretendingInfluence,
+            messageType : GameMessage[GameMessage.Block],
+            data: counter
+        }
     }
 
     challenge() {
+        let counter = this.game.currentMove;
+        let messageType : GameMessage;
 
+        if (this.game.currentMove.block) {
+            messageType = GameMessage.ChallengeBlock;
+            counter.block.challenge = {
+                challengedBy: this.getHeroPlayer(),
+            }
+        } else {
+            messageType = GameMessage.ChallengeAction;
+            counter.challenge = {
+                challengedBy: this.getHeroPlayer(),
+            }
+        }
+
+        this.pendingCounter = {
+            messageType: GameMessage[messageType],
+            data: counter
+        }
     }
 
     waitingPlayerMove() {
@@ -296,25 +347,6 @@ export class GameEngine {
         const currentPlayerName = this.game.currentPlayer.name;
         const vsPlayerName = this.game.currentMove?.vsPlayer?.name;
 
-        if (this.game.currentMove) {
-            switch (this.game.currentMove.action.actionType) {
-                case (ActionType.TakeOneCoin):
-                    return `${currentPlayerName} takes 1 coin`;
-                case (ActionType.TakeTwoCoins):
-                    return `${currentPlayerName} wants to take 2 coins`;
-                case (ActionType.TakeThreeCoins):
-                    return `${currentPlayerName} wants to take 3 coins`;
-                case (ActionType.Assassinate):
-                    return `${currentPlayerName} wants to Assassinate ${vsPlayerName}`;
-                case (ActionType.Steal):
-                    return `${currentPlayerName} wants to Steal from ${vsPlayerName}`;
-                case (ActionType.Coup):
-                    return `${currentPlayerName} launched a coup against ${vsPlayerName}.`;
-                case (ActionType.Exchange):
-                    return `${currentPlayerName} wants to exchange cards.`;
-            }
-        }
-
         if (this.pendingHeroPlayerMove) {
             switch (this.pendingHeroPlayerMove.action.actionType) {
                 case (ActionType.TakeOneCoin):
@@ -331,6 +363,35 @@ export class GameEngine {
                     return `Launch a Coup against ${this.pendingHeroPlayerMove.vsPlayer.name}`;
                 case (ActionType.Exchange):
                     return "Exchange cards";
+            }
+        }
+
+        if (this.pendingCounter) {
+            switch (this.pendingCounter.messageType) {
+                case (GameMessage[GameMessage.Block]):
+                    return `Block with ${influenceToString(this.pendingCounter.pretendingInfluence)}`;
+                case (GameMessage[GameMessage.ChallengeAction]):
+                case (GameMessage[GameMessage.ChallengeBlock]):
+                    return "Challenge";
+            }
+        }
+
+        if (this.game.currentMove) {
+            switch (this.game.currentMove.action.actionType) {
+                case (ActionType.TakeOneCoin):
+                    return `${currentPlayerName} takes 1 coin`;
+                case (ActionType.TakeTwoCoins):
+                    return `${currentPlayerName} wants to take 2 coins`;
+                case (ActionType.TakeThreeCoins):
+                    return `${currentPlayerName} wants to take 3 coins`;
+                case (ActionType.Assassinate):
+                    return `${currentPlayerName} wants to Assassinate ${vsPlayerName}`;
+                case (ActionType.Steal):
+                    return `${currentPlayerName} wants to Steal from ${vsPlayerName}`;
+                case (ActionType.Coup):
+                    return `${currentPlayerName} launched a coup against ${vsPlayerName}.`;
+                case (ActionType.Exchange):
+                    return `${currentPlayerName} wants to exchange cards.`;
             }
         }
 

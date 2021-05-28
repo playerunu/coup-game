@@ -89,12 +89,10 @@ export class Level extends WsScene {
             this.hidePanel(this.heroPlayerPanel);
             this.sendWsMessage({
                 messageType: GameMessage[GameMessage.Action],
-                data: {
-                    currentMove: engine.game.currentMove
-                }
+                data: engine.game.currentMove
             });
         };
-
+        
         this.startCurrentPlayerTween();
 
         this.nextPlayer();
@@ -102,9 +100,6 @@ export class Level extends WsScene {
 
     // Refresh the game objects based on the current game state
     update(time: any, delta: any) {
-        // Show/hide take coins panel buttons
-        this.coinsPanel.setVisible(engine.waitingForTakeCoinsConfirmation());
-
         // Update the current action description text
         this.currentActionDescription.setText(engine.getCurrentActionText());
         Phaser.Display.Align.In.TopCenter(this.currentActionDescription, this.curentActionZone);
@@ -114,8 +109,20 @@ export class Level extends WsScene {
             player.update();
         }
 
-        // Update the hero player panel
-        this.heroPlayerPanel.update();
+        if (engine.isHeroPlayerTurn()) {
+            // Show/hide take coins panel buttons
+            this.coinsPanel.setVisible(engine.waitingForTakeCoinsConfirmation());
+
+            // Update the hero player panel
+            this.heroPlayerPanel.update();
+        } else {
+            // Show/hide take coins panel buttons
+            this.coinsPanel.setVisible(false);
+        }
+
+        if (engine.canCounter()) {
+            this.counterActionPanel.update();
+        }
     }
 
     protected onWsMessage(event) {
@@ -125,27 +132,31 @@ export class Level extends WsScene {
         engine.updateGame(message.Data);
 
         switch (message.MessageType) {
-            
+
             case GameMessage[GameMessage.Action]:
-                let currentTablePlayer = this.getCurrentTablePlayer();
-                switch (engine.game.currentMove.action.actionType) {
-                    case ActionType.TakeOneCoin:
-                        currentTablePlayer.pushCoin(this.bankCoins.pop());
-                        break;
-                    case ActionType.TakeTwoCoins:
-                        [1, 2].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
-                        break;
-                    case ActionType.TakeThreeCoins:
-                        [1, 2, 3].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
-                        break;
-                    case ActionType.Assassinate:
-                        currentTablePlayer.popCoins(3, true);
-                    case ActionType.Coup:
-                        currentTablePlayer.popCoins(7, false);
+              
+                if (!engine.isHeroPlayerTurn()){
+                    let currentTablePlayer = this.getCurrentTablePlayer();
+                    switch (engine.game.currentMove.action.actionType) {
+                        case ActionType.TakeOneCoin:
+                            currentTablePlayer.pushCoin(this.bankCoins.pop());
+                            break;
+                        case ActionType.TakeTwoCoins:
+                            [1, 2].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
+                            break;
+                        case ActionType.TakeThreeCoins:
+                            [1, 2, 3].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
+                            break;
+                        case ActionType.Assassinate:
+                            currentTablePlayer.popCoins(3, true);
+                        case ActionType.Coup:
+                            currentTablePlayer.popCoins(7, false);
+                    }
                 }
                 
-                if (engine.canChallengeMove() || engine.canBlockMove()) {
+                if (engine.canCounter()) {
                     this.showPanel(this.counterActionPanel);
+                    this.counterActionPanel.update();
                 }
 
                 console.log(engine.game);
@@ -161,6 +172,7 @@ export class Level extends WsScene {
                 break;
             case GameMessage[GameMessage.Block]:
                 this.showPanel(this.counterActionPanel);
+                this.counterActionPanel.update();
                 break;
             case GameMessage[GameMessage.WaitingReveal]:
                 break;
@@ -201,8 +213,6 @@ export class Level extends WsScene {
                 continue;
             }
         }
-
-        //engine.isHeroPlayerTurn() && this.showPanel(this.heroPlayerPanel);
     }
 
     private addHeroPlayerPanel() {
@@ -260,12 +270,11 @@ export class Level extends WsScene {
         }
 
         this.counterActionPanel.onPointerOut = () => {
-            engine.cancelPendingAction();
-
+            engine.pendingCounter = null;
         }
 
         this.counterActionPanel.onPointerUp = () => {
-            engine.confirmPendingAction();
+            this.sendWsMessage(engine.pendingCounter);
         }
 
         this.add.existing(this.counterActionPanel);
@@ -292,6 +301,8 @@ export class Level extends WsScene {
             return;
         }
 
+        let lastUpdated: TablePlayer = this.getCurrentTablePlayer();
+
         this.currentPlayerTween = this.tweens.addCounter({
             from: 0,
             to: 100,
@@ -310,6 +321,10 @@ export class Level extends WsScene {
                     );
                     const color = Phaser.Display.Color.GetColor(colorObject.r, colorObject.g, colorObject.b);
 
+                    if (this.getCurrentTablePlayer() != lastUpdated) {
+                        lastUpdated.clearTint();
+                        lastUpdated = this.getCurrentTablePlayer();
+                    }
                     this.getCurrentTablePlayer().setTint(color);
                 } else {
                     if (engine.pendingHeroPlayerMove) {

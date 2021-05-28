@@ -141,9 +141,12 @@ export class TablePlayer extends Phaser.GameObjects.Container {
 
     private setupCoinPanelActions() {
         engine.OnPendingActionConfirm = () => {
-            for (let coin of this.coins) {
-                coin.waitingChallenge = false;
-                coin.clearTint();
+            if (!engine.canBlockMove() && !engine.canChallengeMove()){
+                this.clearTint();
+                for (let coin of this.coins) {
+                    coin.waitingChallenge = false;
+                    coin.clearTint();
+                }
             }
         }
         engine.OnPendingActionCancel = () => {

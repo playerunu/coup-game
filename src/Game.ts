@@ -149,8 +149,60 @@ export const debugGameData = {
       "tableCoins": 46
 };
 
+export const debugGameData3 = {
+    "players": [
+      {
+        "name": "PLayer_unu",
+        "card1": {
+          "influence": 4,
+          "isRevealed": false
+        },
+        "card2": {
+          "influence": 2,
+          "isRevealed": false
+        },
+        "coins": 2,
+        "gamePosition": 1
+      },
+      {
+        "name": "baws",
+        "card1": {
+          "isRevealed": false
+        },
+        "card2": {
+          "isRevealed": false
+        },
+        "coins": 4,
+        "gamePosition": 0
+      }
+    ],
+    "remainingPlayers": 2,
+    "currentPlayer": {
+      "name": "baws",
+      "card1": {
+        "isRevealed": false
+      },
+      "card2": {
+        "isRevealed": false
+      },
+      "coins": 4,
+      "gamePosition": 0
+    },
+    "currentMove": {
+      "action": {
+        "actionType": 1,
+        "canChallenge": false,
+        "canBlock": true
+      },
+      "finished": false,
+      "waitingReveal": false,
+      "waitinExchange": false,
+    },
+    "tableCoins": 44
+  }
+
 class Game {
-    public useDebugData = true;
+    public useDebugData = false;
 
     private readonly gameConfig = {
         width: Constants.gameWidth,
@@ -176,7 +228,7 @@ class Game {
         game.events.on("ready", () => {
             let nextScene = "Lobby";
             if (this.useDebugData) {
-                engine.updateGame(debugGameData);
+                engine.updateGame(debugGameData3);
                 engine.heroPlayerName = "PLayer_unu";
                 nextScene = "Level";
             }

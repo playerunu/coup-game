@@ -6,7 +6,7 @@ export enum GameMessage {
     ActionResult,
 	ChallengeAction,
 	ChallengeActionResult,
-	Block,
+	BlockAction,
 	ChallengeBlock,
 	ChallengeBlockResult,
     WaitingReveal,

@@ -6,6 +6,6 @@ export enum Influence {
     Ambassador
 }
 
-export function influenceToString(influence) : string {
+export function influenceToStr(influence) : string {
     return Influence[influence].toLowerCase();
 }

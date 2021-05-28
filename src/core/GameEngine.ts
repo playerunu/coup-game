@@ -4,11 +4,12 @@ import { Influence } from "../model/Influence";
 import { Action, canCounter } from "../model/Action";
 import { Block } from "../model/Block";
 import { Player } from "../model/Player";
-import { influenceToString } from "../model/Influence";
+import { influenceToStr } from "../model/Influence";
 import { deepMerge } from "../utils/deepMerge";
 import { ActionType } from "../model/Action";
-import { PlayerMove } from "../model/PlayerMove";
+import { PlayerMove, playerMoveToStr } from "../model/PlayerMove";
 import { GameMessage } from "./GameMessage";
+import { challengeToStr } from "../model/Challenge";
 
 export class GameEngine {
     // Intial game state is empty,  it will be populated by incremental updates from the back-end
@@ -126,11 +127,11 @@ export class GameEngine {
         let card2Img: string;
 
         if (engine.isHeroPlayer(player)) {
-            card1Img = influenceToString(player.card1.influence);
-            card2Img = influenceToString(player.card2.influence);
+            card1Img = influenceToStr(player.card1.influence);
+            card2Img = influenceToStr(player.card2.influence);
         } else {
-            card1Img = player.card1.isRevealed ? influenceToString(player.card1.influence) : "back";
-            card2Img = player.card2.isRevealed ? influenceToString(player.card2.influence) : "back";
+            card1Img = player.card1.isRevealed ? influenceToStr(player.card1.influence) : "back";
+            card2Img = player.card2.isRevealed ? influenceToStr(player.card2.influence) : "back";
         }
 
         return {
@@ -267,7 +268,7 @@ export class GameEngine {
     }
 
     block(pretendingInfluence: Influence) {
-        let counter = this.game.currentMove;
+        let counter = Object.assign({}, this.game.currentMove);
         counter.block = { 
             player : this.getHeroPlayer(),
             pretendingInfluence,
@@ -275,7 +276,7 @@ export class GameEngine {
 
         this.pendingCounter = {
             pretendingInfluence : pretendingInfluence,
-            messageType : GameMessage[GameMessage.Block],
+            messageType : GameMessage[GameMessage.BlockAction],
             data: counter
         }
     }
@@ -343,6 +344,11 @@ export class GameEngine {
         }
     }
 
+    confirmPendingCounter() {
+        this.game.currentMove = this.pendingCounter.data;
+        this.pendingCounter = null;
+    }
+
     getCurrentActionText(): string {
         const currentPlayerName = this.game.currentPlayer.name;
         const vsPlayerName = this.game.currentMove?.vsPlayer?.name;
@@ -368,8 +374,8 @@ export class GameEngine {
 
         if (this.pendingCounter) {
             switch (this.pendingCounter.messageType) {
-                case (GameMessage[GameMessage.Block]):
-                    return `Block with ${influenceToString(this.pendingCounter.pretendingInfluence)}`;
+                case (GameMessage[GameMessage.BlockAction]):
+                    return `Block with ${influenceToStr(this.pendingCounter.pretendingInfluence)}`;
                 case (GameMessage[GameMessage.ChallengeAction]):
                 case (GameMessage[GameMessage.ChallengeBlock]):
                     return "Challenge";
@@ -377,23 +383,25 @@ export class GameEngine {
         }
 
         if (this.game.currentMove) {
-            switch (this.game.currentMove.action.actionType) {
-                case (ActionType.TakeOneCoin):
-                    return `${currentPlayerName} takes 1 coin`;
-                case (ActionType.TakeTwoCoins):
-                    return `${currentPlayerName} wants to take 2 coins`;
-                case (ActionType.TakeThreeCoins):
-                    return `${currentPlayerName} wants to take 3 coins`;
-                case (ActionType.Assassinate):
-                    return `${currentPlayerName} wants to Assassinate ${vsPlayerName}`;
-                case (ActionType.Steal):
-                    return `${currentPlayerName} wants to Steal from ${vsPlayerName}`;
-                case (ActionType.Coup):
-                    return `${currentPlayerName} launched a coup against ${vsPlayerName}.`;
-                case (ActionType.Exchange):
-                    return `${currentPlayerName} wants to exchange cards.`;
+            // Blocked
+            if (this.game.currentMove.block) {
+                const block = this.game.currentMove.block;
+                if ("challenge" in block) {
+                    // Someone challenged the block
+                    return challengeToStr(block.challenge, block.player.name, `${block.player} blocks with ${block.pretendingInfluence}`);
+                } else {
+                    return `${block.player.name} blocks with ${influenceToStr(block.pretendingInfluence)}`;
+                }
             }
+
+            // Challenged
+            if (this.game.currentMove.challenge) {
+               return `${challengeToStr(this.game.currentMove.challenge, currentPlayerName, playerMoveToStr(this.game.currentMove, currentPlayerName))}`
+            }
+
+            return playerMoveToStr(this.game.currentMove, currentPlayerName);
         }
+
 
         return this.game.currentPlayer.name + "'s turn";
     }

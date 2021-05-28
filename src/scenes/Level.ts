@@ -170,7 +170,7 @@ export class Level extends WsScene {
             case GameMessage[GameMessage.ChallengeBlockResult]:
             case GameMessage[GameMessage.ChallengeActionResult]:
                 break;
-            case GameMessage[GameMessage.Block]:
+            case GameMessage[GameMessage.BlockAction]:
                 this.showPanel(this.counterActionPanel);
                 this.counterActionPanel.update();
                 break;
@@ -275,6 +275,7 @@ export class Level extends WsScene {
 
         this.counterActionPanel.onPointerUp = () => {
             this.sendWsMessage(engine.pendingCounter);
+            engine.confirmPendingCounter();
         }
 
         this.add.existing(this.counterActionPanel);
@@ -337,11 +338,6 @@ export class Level extends WsScene {
         });
     }
 
-    private stopCurrentPlayerTween() {
-        this.currentPlayerTween && this.currentPlayerTween.stop();
-        this.currentPlayerTween = null;
-    }
-
     private showPanel(panel: Phaser.GameObjects.GameObject) {
         this.tweens.add({
             targets: panel,
@@ -349,9 +345,6 @@ export class Level extends WsScene {
             delay: 500,
             x: Constants.gameWidth - 270,
             duration: 1500,
-            // onComplete: () => {
-            //     this.startCurrentPlayerTween();
-            // }
         });
     }
 

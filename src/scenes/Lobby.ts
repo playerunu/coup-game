@@ -64,12 +64,12 @@ export class Lobby extends WsScene {
             }
         });
 
-        // this.tweens.add({
-        //     targets: nameForm,
-        //     y: baseHeight / 2,
-        //     duration: 3000,
-        //     ease: "Power3"
-        // });
+        this.tweens.add({
+            targets: nameForm,
+            y: baseHeight / 2,
+            duration: 3000,
+            ease: "Power3"
+        });
     }
 
     protected onWsMessage(event) {

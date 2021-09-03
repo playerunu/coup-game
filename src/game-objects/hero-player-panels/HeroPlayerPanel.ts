@@ -70,6 +70,7 @@ export class HeroPlayerPanel extends Phaser.GameObjects.Container {
             } else {
                 actionPanel.setY(HeroPlayerPanel.PLAYER_MOVE_Y[panelIndex]);
                 panelIndex++;
+                actionPanel.update();
             }
         }
     }

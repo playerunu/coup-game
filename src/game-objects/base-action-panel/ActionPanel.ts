@@ -1,5 +1,4 @@
 import { Player } from "../../model/Player";
-import { ActionType } from "../../model/Action";
 import { Constants } from "../../Constants";
 import { ActionIcon } from "./ActionIcon";
 

@@ -3,7 +3,6 @@ import { Player } from "../../model/Player";
 import { ActionType } from "../../model/Action";
 import { ActionPanel } from "../base-action-panel/ActionPanel";
 import { ActionIcon } from "../base-action-panel/ActionIcon";
-import { Constants } from "../../Constants";
 import { engine } from "../../core/GameEngine";
 
 export class VsPlayerPanel extends ActionPanel {

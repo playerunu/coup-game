@@ -126,7 +126,7 @@ export class GameEngine {
         let card1Img: string;
         let card2Img: string;
 
-        if (engine.isHeroPlayer(player)) {
+        if (this.isHeroPlayer(player)) {
             card1Img = influenceToStr(player.card1.influence);
             card2Img = influenceToStr(player.card2.influence);
         } else {
@@ -140,7 +140,7 @@ export class GameEngine {
         }
     }
 
-    canTakeCoin() {
+      canTakeCoin() {
         if (!this.isHeroPlayer(this.game.currentPlayer)) {
             return false;
         }
@@ -157,7 +157,7 @@ export class GameEngine {
     }
 
     isMoveFinished() : boolean {
-        return engine.game.currentMove?.finished;
+        return this.game.currentMove?.finished;
     }
 
     canCounter() : boolean {
@@ -169,26 +169,27 @@ export class GameEngine {
             return false;
         }
 
-        if (this.isHeroPlayerTurn()) {
+        if (this.waitingPlayerMove() && this.isHeroPlayerTurn()) {
             return false;
         }
         
         // Check if the current action can be challenged
-        if (engine.game.currentMove) {
-            if (engine.game.currentMove.action.canChallenge && 
+        const currentMove = this.game.currentMove;
+        if (currentMove) {
+            if (currentMove.action.canChallenge && 
                 // Check if nobody challenged it yet
-                !engine.game.currentMove.challenge && 
-                // Blocked actions cannot be challenged anymore
-                !engine.game.currentMove.block) 
+                !currentMove.challenge && 
+                // Cannot challenge anymore if someone blocked already
+                !currentMove.block) 
             {
                 return true;
             }
     
-            // Check if the block action can be challenged
-            if (engine.game.currentMove.block && 
-                !engine.game.currentMove.block.challenge &&
-                // Can challenge only if the block was made by someone else
-                !engine.isHeroPlayer(engine.game.currentMove.block.player.name)) 
+            // Check if the block can be challenged
+            if (currentMove.block && 
+                !currentMove.block.challenge &&
+                // Don't challenge yourself 
+                !this.isHeroPlayer(currentMove.block.player.name)) 
             {
                 return true;
             }
@@ -206,8 +207,8 @@ export class GameEngine {
             return false;
         }
         
-        if (engine.game.currentMove) {
-            if (engine.game.currentMove.action.canBlock && !engine.game.currentMove.block){
+        if (this.game.currentMove) {
+            if (this.game.currentMove.action.canBlock && !this.game.currentMove.block){
                 return true;
             }
         }
@@ -215,6 +216,9 @@ export class GameEngine {
         return false;
     }
 
+    // 
+    // Takes one coin and updates the pendingHeroPlayerMove
+    // 
     takeCoin() {
         if (!this.pendingHeroPlayerMove) {
             this.pendingHeroPlayerMove = {
@@ -237,7 +241,7 @@ export class GameEngine {
             action: {
                 actionType: ActionType.Steal,
             },
-            vsPlayer: engine.getPlayerByName(vsPlayerName)
+            vsPlayer: this.getPlayerByName(vsPlayerName)
         }
     }
 
@@ -246,7 +250,7 @@ export class GameEngine {
             action: {
                 actionType: ActionType.Assassinate,
             },
-            vsPlayer: engine.getPlayerByName(vsPlayerName)
+            vsPlayer: this.getPlayerByName(vsPlayerName)
         }
     }
 
@@ -255,7 +259,7 @@ export class GameEngine {
             action: {
                 actionType: ActionType.Coup,
             },
-            vsPlayer: engine.getPlayerByName(vsPlayerName)
+            vsPlayer: this.getPlayerByName(vsPlayerName)
         }
     }
 
@@ -268,7 +272,7 @@ export class GameEngine {
     }
 
     block(pretendingInfluence: Influence) {
-        let counter = Object.assign({}, this.game.currentMove);
+        let counter = deepMerge({}, this.game.currentMove);
         counter.block = { 
             player : this.getHeroPlayer(),
             pretendingInfluence,
@@ -282,7 +286,7 @@ export class GameEngine {
     }
 
     challenge() {
-        let counter = this.game.currentMove;
+        let counter = deepMerge({}, this.game.currentMove);
         let messageType : GameMessage;
 
         if (this.game.currentMove.block) {

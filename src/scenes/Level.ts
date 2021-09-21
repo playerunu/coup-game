@@ -92,7 +92,7 @@ export class Level extends WsScene {
                 data: engine.game.currentMove
             });
         };
-        
+
         this.startCurrentPlayerTween();
 
         this.nextPlayer();
@@ -132,12 +132,14 @@ export class Level extends WsScene {
         engine.updateGame(message.Data);
 
         switch (message.MessageType) {
-
             case GameMessage[GameMessage.Action]:
-              
-                if (!engine.isHeroPlayerTurn()){
+
+                if (!engine.isHeroPlayerTurn()) {
                     let currentTablePlayer = this.getCurrentTablePlayer();
                     switch (engine.game.currentMove.action.actionType) {
+                        //
+                        // Show coin animations for take 1/2/3 coins, assassinate and coup action
+                        //
                         case ActionType.TakeOneCoin:
                             currentTablePlayer.pushCoin(this.bankCoins.pop());
                             break;
@@ -153,7 +155,7 @@ export class Level extends WsScene {
                             currentTablePlayer.popCoins(7, false);
                     }
                 }
-                
+
                 if (engine.canCounter()) {
                     this.showPanel(this.counterActionPanel);
                     this.counterActionPanel.update();
@@ -165,6 +167,7 @@ export class Level extends WsScene {
                 break;
             case GameMessage[GameMessage.ChallengeAction]:
             case GameMessage[GameMessage.ChallengeBlock]:
+                // Hide the challenge panel until the challenge is solved by the server
                 this.hidePanel(this.counterActionPanel);
                 break;
             case GameMessage[GameMessage.ChallengeBlockResult]:
@@ -185,7 +188,6 @@ export class Level extends WsScene {
                 break;
             case GameMessage[GameMessage.GameOver]:
                 break;
-
         }
     }
 
@@ -282,6 +284,8 @@ export class Level extends WsScene {
     }
 
     private nextPlayer() {
+        // Update the hero player panel
+        this.heroPlayerPanel.update();
         if (engine.isHeroPlayerTurn()) {
             this.showPanel(this.heroPlayerPanel);
         }
@@ -341,19 +345,19 @@ export class Level extends WsScene {
     private showPanel(panel: Phaser.GameObjects.GameObject) {
         this.tweens.add({
             targets: panel,
-            ease: "Back",
-            delay: 500,
+            //ease: "Back",
+            //delay: 500,
             x: Constants.gameWidth - 270,
-            duration: 1500,
+            duration: 100,
         });
     }
 
     private hidePanel(panel: Phaser.GameObjects.GameObject) {
         this.tweens.add({
             targets: panel,
-            ease: "Back",
+            //ease: "Back",
             x: Constants.gameWidth + 300,
-            duration: 4000
+            duration: 100
         })
     }
 }

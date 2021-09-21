@@ -3,7 +3,7 @@ import { Constants } from "../../Constants";
 import { ActionIcon } from "./ActionIcon";
 
 export class ActionPanel extends Phaser.GameObjects.Container {
-    public vsPlayer: Player;
+    public vsPlayer?: Player;
 
     protected description: Phaser.GameObjects.Text;
     private actionIcons: ActionIcon[];

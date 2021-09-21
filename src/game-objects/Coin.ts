@@ -24,7 +24,7 @@ export class Coin extends Phaser.GameObjects.Image {
 
     private setupEvents() {
         this.on("pointerdown", () =>  {
-            if (!this.canTake()) {
+            if (!this.canBeTaken()) {
                 return;
             }
             
@@ -33,7 +33,7 @@ export class Coin extends Phaser.GameObjects.Image {
         });
         
         this.on("pointerup", () => {
-            if (!this.canTake()) {
+            if (!this.canBeTaken()) {
                 return;
             }
 
@@ -46,7 +46,7 @@ export class Coin extends Phaser.GameObjects.Image {
         });
 
         this.on("pointerover", () => {
-            if (!this.canTake()) {
+            if (!this.canBeTaken()) {
                 return;
             }
 
@@ -63,7 +63,7 @@ export class Coin extends Phaser.GameObjects.Image {
         });
     }
 
-    private canTake() {
+    private canBeTaken() {
         return engine.canTakeCoin() && this.isInBank && !this.isDragging;
     }
 }

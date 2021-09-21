@@ -15,8 +15,6 @@ export class ChallengePanel extends ActionPanel {
             .setActionType(ActionType.Challenge);
 
         this.setActionIcons([this.challengeIcon]);
-
-        this.update();
     }
 }
 

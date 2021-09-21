@@ -1,5 +1,4 @@
 import { Player } from "./Player"
-import { playerMoveToStr } from "./PlayerMove";
 
 export type Challenge = {
     challengedBy?: Player;
@@ -7,8 +6,8 @@ export type Challenge = {
     waitingReveal?: boolean;
 }
 
-export function challengeToStr(challenge: Challenge, vsPlayerName: string, challangedActionStr: string): string {
-    const challenger = this.game.currentMove.challenge.challengedBy;
+export function challengeToStr(challenge: Challenge, vsPlayerName: string, challengedActionStr: string): string {
+    const challenger = challenge.challengedBy;
 
     if ('success' in challenge) {
         if (challenge.success) {
@@ -18,6 +17,6 @@ export function challengeToStr(challenge: Challenge, vsPlayerName: string, chall
         }
     } else {
         // Still waiting for the challenge result from the server
-        return `Challenged by ${challenger} : ${challangedActionStr}`; 
+        return `Challenged by ${challenger} : ${challengedActionStr}`; 
     }
 }

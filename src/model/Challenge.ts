@@ -7,7 +7,7 @@ export type Challenge = {
 }
 
 export function challengeToStr(challenge: Challenge, vsPlayerName: string, challengedActionStr: string): string {
-    const challenger = challenge.challengedBy;
+    const challenger = challenge.challengedBy.name;
 
     if ('success' in challenge) {
         if (challenge.success) {

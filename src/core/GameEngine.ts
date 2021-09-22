@@ -392,7 +392,8 @@ export class GameEngine {
                 const block = this.game.currentMove.block;
                 if ("challenge" in block) {
                     // Someone challenged the block
-                    return challengeToStr(block.challenge, block.player.name, `${block.player} blocks with ${block.pretendingInfluence}`);
+                    const challengedActionStr = `${block.player.name} blocks with ${influenceToStr(block.pretendingInfluence)}`;
+                    return challengeToStr(block.challenge, block.player.name, challengedActionStr);
                 } else {
                     return `${block.player.name} blocks with ${influenceToStr(block.pretendingInfluence)}`;
                 }

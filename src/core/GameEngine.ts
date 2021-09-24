@@ -140,7 +140,7 @@ export class GameEngine {
         }
     }
 
-      canTakeCoin() {
+    canTakeCoin() {
         if (!this.isHeroPlayer(this.game.currentPlayer)) {
             return false;
         }

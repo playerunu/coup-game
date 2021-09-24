@@ -64,8 +64,7 @@ export class CounterActionPanel extends Phaser.GameObjects.Container {
             this.blockPanel.setVisible(false);
         }
         
-        const canChallangeMove = engine.canChallengeMove();
-        if (canChallangeMove ) {
+        if (engine.canChallengeMove() ) {
             this.challengePanel.setY(CounterActionPanel.PANELS_Y[panelIndex]);
             this.challengePanel.setVisible(true);
             this.challengePanel.update();

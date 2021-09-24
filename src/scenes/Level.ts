@@ -119,10 +119,6 @@ export class Level extends WsScene {
             // Show/hide take coins panel buttons
             this.coinsPanel.setVisible(false);
         }
-
-        if (engine.canCounter()) {
-            this.counterActionPanel.update();
-        }
     }
 
     protected onWsMessage(event) {
@@ -172,12 +168,11 @@ export class Level extends WsScene {
                 break;
             case GameMessage[GameMessage.ChallengeBlockResult]:
             case GameMessage[GameMessage.ChallengeActionResult]:
+            case GameMessage[GameMessage.WaitingReveal]:
                 break;
             case GameMessage[GameMessage.BlockAction]:
                 this.showPanel(this.counterActionPanel);
                 this.counterActionPanel.update();
-                break;
-            case GameMessage[GameMessage.WaitingReveal]:
                 break;
             case GameMessage[GameMessage.WaitingExchange]:
                 break;
@@ -278,6 +273,7 @@ export class Level extends WsScene {
         this.counterActionPanel.onPointerUp = () => {
             this.sendWsMessage(engine.pendingCounter);
             engine.confirmPendingCounter();
+            this.hidePanel(this.counterActionPanel);
         }
 
         this.add.existing(this.counterActionPanel);

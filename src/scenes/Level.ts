@@ -1,5 +1,4 @@
 import { Constants } from "../Constants";
-import { isEliminated } from "../model/Player";
 import { GameMessage } from "../core/GameMessage";
 import { engine } from "../core/GameEngine";
 import { WsScene } from "./WsScene";
@@ -9,6 +8,7 @@ import { TakeCoinsPanel } from "../game-objects/hero-player-panels/TakeCoinsPane
 import { ActionType } from "../model/Action";
 import { HeroPlayerPanel } from "../game-objects/hero-player-panels/HeroPlayerPanel";
 import { CounterActionPanel } from "../game-objects/counter-action-panels/CounterActionPanel";
+import { Card } from "../model/Card";
 
 export class Level extends WsScene {
     private bankCoins: Coin[] = [];
@@ -125,7 +125,7 @@ export class Level extends WsScene {
         const message = JSON.parse(event.data);
         console.log(message);
         this.messages.push(message);
-        engine.updateGame(message.Data);
+        engine.updateGameState(message.Data);
 
         switch (message.MessageType) {
             case GameMessage[GameMessage.Action]:
@@ -207,7 +207,21 @@ export class Level extends WsScene {
             }
 
             if (engine.isHeroPlayer(player)) {
-                continue;
+                tablePlayer.onPointerOver = (card: Card, cardImg: Phaser.GameObjects.Image) => {
+                    if (engine.waitingReveal() && engine.isHeroPlayer(engine.getWaitingRevealPlayer())){
+                        cardImg.setTint(Constants.redTint);
+                        engine.revealCard(card);
+                    }
+                }
+                tablePlayer.onPointerOut = (card: Card, cardImg: Phaser.GameObjects.Image) => {
+                    cardImg.clearTint();
+                    engine.pendingReveal = null;
+                }
+                tablePlayer.onPointerUp = (card: Card, cardImg: Phaser.GameObjects.Image) => {
+                    this.sendWsMessage(engine.pendingReveal);
+                    cardImg.clearTint();
+                    engine.pendingReveal = null;
+                }
             }
         }
     }

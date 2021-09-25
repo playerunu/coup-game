@@ -35,8 +35,9 @@ export class GameEngine {
     }
 
     public pendingCounter = null;
+    public pendingReveal = null;
 
-    updateGame(source: any) {
+    updateGameState(source: any) {
         let game = this.game;
 
         if (!("currentMove" in source)) {
@@ -73,7 +74,6 @@ export class GameEngine {
                 case "currentMove":
                     game.currentMove = deepMerge({}, source.currentMove) as PlayerMove;
                     break;
-                
                 case "tableCoins":
                     game.tableCoins = source.tableCoins;
                     break;
@@ -82,12 +82,10 @@ export class GameEngine {
     }
 
     // Sets hero player full card details
-    // If the player is not fund, it will create it
+    // If the player is not found, it will create it
     setHeroPlayerCards(cards: any) {
         // Extract the cards and convert the influence from string to enum
         let { card1, card2 } = cards;
-        card1.influence = Influence[card1.influence];
-        card2.influence = Influence[card2.influence];
 
         // Lookup if the player already exists in game state
         let heroPlayer = this.getHeroPlayer();
@@ -102,7 +100,7 @@ export class GameEngine {
         heroPlayer.card1 = card1;
         heroPlayer.card2 = card2;
 
-        this.updateGame({ "players": [heroPlayer] });
+        this.updateGameState({ "players": [heroPlayer] });
     }
 
     isHeroPlayer(player: Player | string) {
@@ -122,24 +120,6 @@ export class GameEngine {
         return this.game.players.find(player => player.name === name);
     }
 
-    getCardInfluencesStr(player: Player): { card1Img: string, card2Img: string } {
-        let card1Img: string;
-        let card2Img: string;
-
-        if (this.isHeroPlayer(player)) {
-            card1Img = influenceToStr(player.card1.influence);
-            card2Img = influenceToStr(player.card2.influence);
-        } else {
-            card1Img = player.card1.isRevealed ? influenceToStr(player.card1.influence) : "back";
-            card2Img = player.card2.isRevealed ? influenceToStr(player.card2.influence) : "back";
-        }
-
-        return {
-            card1Img,
-            card2Img
-        }
-    }
-
     canTakeCoin() {
         if (!this.isHeroPlayer(this.game.currentPlayer)) {
             return false;
@@ -156,15 +136,15 @@ export class GameEngine {
         return true;
     }
 
-    isMoveFinished() : boolean {
+    isMoveFinished(): boolean {
         return this.game.currentMove?.finished;
     }
 
-    canCounter() : boolean {
+    canCounter(): boolean {
         return this.canChallengeMove() || this.canBlockMove();
     }
 
-    canChallengeMove() : boolean {
+    canChallengeMove(): boolean {
         if (this.isMoveFinished()) {
             return false;
         }
@@ -172,33 +152,31 @@ export class GameEngine {
         if (this.waitingPlayerMove() && this.isHeroPlayerTurn()) {
             return false;
         }
-        
+
         // Check if the current action can be challenged
         const currentMove = this.game.currentMove;
         if (currentMove) {
-            if (currentMove.action.canChallenge && 
+            if (currentMove.action.canChallenge &&
                 // Check if nobody challenged it yet
-                !currentMove.challenge && 
+                !currentMove.challenge &&
                 // Cannot challenge anymore if someone blocked already
-                !currentMove.block) 
-            {
+                !currentMove.block) {
                 return true;
             }
-    
+
             // Check if the block can be challenged
-            if (currentMove.block && 
+            if (currentMove.block &&
                 !currentMove.block.challenge &&
                 // Don't challenge yourself 
-                !this.isHeroPlayer(currentMove.block.player.name)) 
-            {
+                !this.isHeroPlayer(currentMove.block.player.name)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 
-    canBlockMove() : boolean {
+    canBlockMove(): boolean {
         if (this.isMoveFinished()) {
             return false;
         }
@@ -206,9 +184,9 @@ export class GameEngine {
         if (this.isHeroPlayerTurn()) {
             return false;
         }
-        
+
         if (this.game.currentMove) {
-            if (this.game.currentMove.action.canBlock && !this.game.currentMove.block){
+            if (this.game.currentMove.action.canBlock && !this.game.currentMove.block) {
                 return true;
             }
         }
@@ -273,21 +251,21 @@ export class GameEngine {
 
     block(pretendingInfluence: Influence) {
         let counter = deepMerge({}, this.game.currentMove);
-        counter.block = { 
-            player : this.getHeroPlayer(),
+        counter.block = {
+            player: this.getHeroPlayer(),
             pretendingInfluence,
         }
 
         this.pendingCounter = {
-            pretendingInfluence : pretendingInfluence,
-            messageType : GameMessage[GameMessage.BlockAction],
+            pretendingInfluence: pretendingInfluence,
+            messageType: GameMessage[GameMessage.BlockAction],
             data: counter
         }
     }
 
     challenge() {
         let counter = deepMerge({}, this.game.currentMove);
-        let messageType : GameMessage;
+        let messageType: GameMessage;
 
         if (this.game.currentMove.block) {
             messageType = GameMessage.ChallengeBlock;
@@ -304,6 +282,20 @@ export class GameEngine {
         this.pendingCounter = {
             messageType: GameMessage[messageType],
             data: counter
+        }
+    }
+
+    revealCard(card: Card) {
+        let player = deepMerge({}, this.getHeroPlayer()); 
+        if (card.influence === player.card1.influence){
+            player.card1.isRevealed = true;
+        } else if (card.influence === player.card2.influence) {
+            player.card2.isRevealed = true;
+        } 
+        
+        this.pendingReveal = {
+            messageType: GameMessage[GameMessage.RevealCard],
+            data: player
         }
     }
 
@@ -329,6 +321,40 @@ export class GameEngine {
         }
 
         return false;
+    }
+
+    waitingReveal() {
+        return this.game.currentMove?.waitingReveal
+            || this.game.currentMove?.challenge?.waitingReveal   
+            || this.game.currentMove?.block?.challenge?.waitingReveal;
+    }
+
+    // Returns the player for which we are waiting the current reveal
+    getWaitingRevealPlayer() {
+        if (this.game.currentMove?.waitingReveal) {
+            // Coup
+            return this.game.currentMove.vsPlayer;
+        } else if (this.game.currentMove?.challenge?.waitingReveal) {
+            const challenge = this.game.currentMove?.challenge;
+            // Challenge - current move
+            if (challenge.success) {
+                // Challenge won
+                return this.game.currentPlayer;
+            } else {
+                // Challenge lost
+                return challenge.challengedBy;
+            }
+        } else if (this.game.currentMove?.block?.challenge?.waitingReveal) {
+            const challenge = this.game.currentMove?.block?.challenge;
+            // Challenge - block
+            if (challenge.success) {
+                // Challenge won
+                return this.game.currentMove?.block.player;
+            } else {
+                // Challenge lost
+                return challenge.challengedBy;
+            }
+        }
     }
 
     confirmPendingAction() {
@@ -401,7 +427,7 @@ export class GameEngine {
 
             // Challenged
             if (this.game.currentMove.challenge) {
-               return `${challengeToStr(this.game.currentMove.challenge, currentPlayerName, playerMoveToStr(this.game.currentMove, currentPlayerName))}`
+                return `${challengeToStr(this.game.currentMove.challenge, currentPlayerName, playerMoveToStr(this.game.currentMove, currentPlayerName))}`
             }
 
             return playerMoveToStr(this.game.currentMove, currentPlayerName);

@@ -78,7 +78,7 @@ export class Lobby extends WsScene {
 
         switch (message.MessageType) {
             case GameMessage[GameMessage.GameStarted]:
-                engine.updateGame(message.Data);
+                engine.updateGameState(message.Data);
                 this.startScene("Level");
                 console.log(engine.game);
                 break;

@@ -228,7 +228,7 @@ class Game {
         game.events.on("ready", () => {
             let nextScene = "Lobby";
             if (this.useDebugData) {
-                engine.updateGame(debugGameData3);
+                engine.updateGameState(debugGameData3);
                 engine.heroPlayerName = "PLayer_unu";
                 nextScene = "Level";
             }

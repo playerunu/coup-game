@@ -56,7 +56,7 @@ export class TablePlayer extends Phaser.GameObjects.Container {
         }
     }
 
-    pushCoin(coin: Coin, isHeroPlayerAction = false) {
+    getCoinFromBank(coin: Coin, isHeroPlayerAction = false) {
         this.coins.push(coin);
         if (isHeroPlayerAction) {
             engine.takeCoin();
@@ -78,16 +78,38 @@ export class TablePlayer extends Phaser.GameObjects.Container {
         })
     }
 
-    popCoins(count: number, waitingChallenge?: boolean) {
-        // TODO use waitingChallenge to set tint on coins 
-        let popped = 0;
-        for (let coin of this.coins) {
-            this.popCoin(coin);
-
-            popped++;
-            if (popped == count) {
-                break;
+    stealCoin(coin: Coin) {
+        this.coins.push(coin);
+      
+        this.scene.tweens.add({
+            targets: coin,
+            x: this.x + this.coins.length * TablePlayer.COIN_OFFSET,
+            y: this.y,
+            duration: 400,
+            onComplete: () => {
+                // Set player coin properties
+                coin.isInBank = false;
+                coin.isDragging = false;
             }
+        })
+    }
+
+    getCoinToBeStolen() : Coin[] {
+        let coinsToBeStolen : Coin[] = [];
+        coinsToBeStolen.push(this.coins.pop());
+
+        if (this.coins.length >= 1) {
+            coinsToBeStolen.push(this.coins.pop());
+        }
+        
+        return coinsToBeStolen;
+    }
+
+    moveCoinsToBank(count: number, waitingChallenge?: boolean) {
+        // TODO use waitingChallenge to set tint on coins 
+        for (let i = 0; i < count; i++) {
+            let coin = this.coins.pop();
+            this.moveCoinToBank(coin);
         }
     }
 
@@ -162,7 +184,7 @@ export class TablePlayer extends Phaser.GameObjects.Container {
 
     }
 
-    private popCoin(coin: Coin, waitingChallenge: boolean = false) {
+    private moveCoinToBank(coin: Coin, waitingChallenge: boolean = false) {
         this.scene.tweens.add({
             targets: coin,
             x: coin.tableX,
@@ -204,7 +226,7 @@ export class TablePlayer extends Phaser.GameObjects.Container {
 
             this.coins = coinsToKeep;
             for (let coin of coinsToDiscard) {
-                this.popCoin(coin);
+                this.moveCoinToBank(coin);
             }
         }
     }

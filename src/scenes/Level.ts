@@ -129,26 +129,28 @@ export class Level extends WsScene {
 
         switch (message.MessageType) {
             case GameMessage[GameMessage.Action]:
-
+                let actionType = engine.game.currentMove.action.actionType;
                 if (!engine.isHeroPlayerTurn()) {
                     let currentTablePlayer = this.getCurrentTablePlayer();
-                    switch (engine.game.currentMove.action.actionType) {
+                    switch (actionType) {
                         //
                         // Show coin animations for take 1/2/3 coins, assassinate and coup action
                         //
                         case ActionType.TakeOneCoin:
-                            currentTablePlayer.pushCoin(this.bankCoins.pop());
+                            currentTablePlayer.getCoinFromBank(this.bankCoins.pop());
                             break;
                         case ActionType.TakeTwoCoins:
-                            [1, 2].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
+                            [1, 2].forEach(() => currentTablePlayer.getCoinFromBank(this.bankCoins.pop()));
                             break;
                         case ActionType.TakeThreeCoins:
-                            [1, 2, 3].forEach(() => currentTablePlayer.pushCoin(this.bankCoins.pop()));
+                            [1, 2, 3].forEach(() => currentTablePlayer.getCoinFromBank(this.bankCoins.pop()));
                             break;
                         case ActionType.Assassinate:
-                            currentTablePlayer.popCoins(3, true);
+                            currentTablePlayer.moveCoinsToBank(3, true);
+                            break;
                         case ActionType.Coup:
-                            currentTablePlayer.popCoins(7, false);
+                            currentTablePlayer.moveCoinsToBank(7, false);
+                            break;
                     }
                 }
 
@@ -160,10 +162,23 @@ export class Level extends WsScene {
                 console.log(engine.game);
                 break;
             case GameMessage[GameMessage.ActionResult]:
+                actionType = engine.game.currentMove.action.actionType;
+                if (actionType === ActionType.Steal) {
+                    let currentTablePlayer = this.getCurrentTablePlayer();
+                    let vsPlayer = this.getCurrentVsTablePlayer();
+                    
+                    for (const coin of vsPlayer.getCoinToBeStolen()) {
+                        currentTablePlayer.stealCoin(coin);    
+                    }
+                }
+
+                this.hidePanel(this.counterActionPanel);
                 break;
             case GameMessage[GameMessage.ChallengeAction]:
             case GameMessage[GameMessage.ChallengeBlock]:
+            case GameMessage[GameMessage.WaitingExchange]:
                 // Hide the challenge panel until the challenge is solved by the server
+                this.counterActionPanel.update();
                 this.hidePanel(this.counterActionPanel);
                 break;
             case GameMessage[GameMessage.ChallengeBlockResult]:
@@ -173,8 +188,6 @@ export class Level extends WsScene {
             case GameMessage[GameMessage.BlockAction]:
                 this.showPanel(this.counterActionPanel);
                 this.counterActionPanel.update();
-                break;
-            case GameMessage[GameMessage.WaitingExchange]:
                 break;
             case GameMessage[GameMessage.ExchangeComplete]:
                 break;
@@ -203,7 +216,7 @@ export class Level extends WsScene {
 
             // Draw the coins
             for (let index = 0; index < player.coins; index++) {
-                tablePlayer.pushCoin(this.bankCoins.pop());
+                tablePlayer.getCoinFromBank(this.bankCoins.pop());
             }
 
             if (engine.isHeroPlayer(player)) {
@@ -259,6 +272,14 @@ export class Level extends WsScene {
         }
 
         this.heroPlayerPanel.onPointerUp = () => {
+            // Show coup animations for hero player's assassinate/coup actions
+            if (engine.isPendingAssassinate()) {
+                this.HeroPlayer.moveCoinsToBank(3, true);
+            } else if (engine.isPendingCoup()) {
+                this.HeroPlayer.moveCoinsToBank(7, false);
+            }
+
+            
             engine.confirmPendingAction();
             this.hidePanel(this.heroPlayerPanel);
         }
@@ -304,7 +325,13 @@ export class Level extends WsScene {
     private getCurrentTablePlayer(): TablePlayer {
         const currentPlayer = engine.game.currentPlayer;
 
-        return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName == currentPlayer.name);
+        return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName === currentPlayer.name);
+    }
+
+    private getCurrentVsTablePlayer(): TablePlayer {
+        const vsPlayer = engine.game.currentMove.vsPlayer;
+        
+        return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName === vsPlayer.name);
     }
 
     private enqueueTween(callback: () => void) {

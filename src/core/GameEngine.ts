@@ -140,6 +140,14 @@ export class GameEngine {
         return this.game.currentMove?.finished;
     }
 
+    isWaitingReveal() : boolean {
+        return this.game.currentMove?.waitingReveal;
+    }
+
+    isWaitingExchange() : boolean {
+        return this.game.currentMove?.waitingExchange;
+    }
+
     canCounter(): boolean {
         return this.canChallengeMove() || this.canBlockMove();
     }
@@ -160,7 +168,9 @@ export class GameEngine {
                 // Check if nobody challenged it yet
                 !currentMove.challenge &&
                 // Cannot challenge anymore if someone blocked already
-                !currentMove.block) {
+                !currentMove.block &&
+                // Don't challenge yourself 
+                !this.isHeroPlayer(this.game.currentPlayer)) {
                 return true;
             }
 
@@ -285,6 +295,36 @@ export class GameEngine {
         }
     }
 
+    isPendingCoup() {
+        return this.pendingHeroPlayerMove?.action?.actionType === ActionType.Coup;
+    }
+
+    isPendingAssassinate() {
+        return this.pendingHeroPlayerMove?.action?.actionType === ActionType.Assassinate;
+    }
+
+    confirmPendingAction() {
+        this.game.currentMove = this.pendingHeroPlayerMove;
+        this.pendingHeroPlayerMove = null;
+
+        for (const callback of this.onPendingConfirmCallbacks) {
+            callback();
+        }
+    }
+
+    cancelPendingAction() {
+        this.pendingHeroPlayerMove = null;
+
+        for (const callback of this.onPendingCancelCallbacks) {
+            callback();
+        }
+    }
+
+    confirmPendingCounter() {
+        this.game.currentMove = this.pendingCounter.data;
+        this.pendingCounter = null;
+    }
+
     revealCard(card: Card) {
         let player = deepMerge({}, this.getHeroPlayer()); 
         if (card.influence === player.card1.influence){
@@ -357,30 +397,9 @@ export class GameEngine {
         }
     }
 
-    confirmPendingAction() {
-        this.game.currentMove = this.pendingHeroPlayerMove;
-        this.pendingHeroPlayerMove = null;
-
-        for (const callback of this.onPendingConfirmCallbacks) {
-            callback();
-        }
-    }
-
-    cancelPendingAction() {
-        this.pendingHeroPlayerMove = null;
-
-        for (const callback of this.onPendingCancelCallbacks) {
-            callback();
-        }
-    }
-
-    confirmPendingCounter() {
-        this.game.currentMove = this.pendingCounter.data;
-        this.pendingCounter = null;
-    }
-
     getCurrentActionText(): string {
         const currentPlayerName = this.game.currentPlayer.name;
+        const currentMove = this.game.currentMove;
         const vsPlayerName = this.game.currentMove?.vsPlayer?.name;
 
         if (this.pendingHeroPlayerMove) {
@@ -412,10 +431,10 @@ export class GameEngine {
             }
         }
 
-        if (this.game.currentMove) {
+        if (currentMove) {
             // Blocked
-            if (this.game.currentMove.block) {
-                const block = this.game.currentMove.block;
+            if (currentMove.block) {
+                const block = currentMove.block;
                 if ("challenge" in block) {
                     // Someone challenged the block
                     const challengedActionStr = `${block.player.name} blocks with ${influenceToStr(block.pretendingInfluence)}`;
@@ -426,11 +445,30 @@ export class GameEngine {
             }
 
             // Challenged
-            if (this.game.currentMove.challenge) {
-                return `${challengeToStr(this.game.currentMove.challenge, currentPlayerName, playerMoveToStr(this.game.currentMove, currentPlayerName))}`
+            if (currentMove.challenge) {
+                return `${challengeToStr(currentMove.challenge, currentPlayerName, playerMoveToStr(currentMove, currentPlayerName))}`
             }
 
-            return playerMoveToStr(this.game.currentMove, currentPlayerName);
+            if (this.isMoveFinished()) {
+                // Waiting assassination reveal (waiting challenge is handled above already)
+                if (this.isWaitingReveal()) {
+                    if (currentMove.action.actionType === ActionType.Assassinate) {
+                        // Waiting assassination reveal 
+                        return `${vsPlayerName} was assassinated by ${currentPlayerName}. Waiting for ${vsPlayerName} to reveal a card.`
+                    } else {
+                        // Waiting coup reveal 
+                        return `${currentPlayerName} launched a coup against ${vsPlayerName}. Waiting for ${vsPlayerName} to reveal a card.`
+                    } 
+                    // Waiting challenge is already handled above
+                }
+
+                // Waiting exchange
+                if (this.isWaitingExchange()) {
+                    return `Waiting for ${currentPlayerName} to exchange cards.`
+                }
+            }
+
+            return playerMoveToStr(currentMove, currentPlayerName);
         }
 
 

@@ -6,6 +6,7 @@ export const Constants = {
     greenTint: 0x44ff44,
     darkGreenTint: 0x298c29,
     yellowTint: 0xe8ff00,
+    yellowTint2: 0xd0d693,
     redTint: 0xff4646,
 
     // Fonts

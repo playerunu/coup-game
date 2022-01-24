@@ -9,6 +9,7 @@ import { ActionType } from "../model/Action";
 import { HeroPlayerPanel } from "../game-objects/hero-player-panels/HeroPlayerPanel";
 import { CounterActionPanel } from "../game-objects/counter-action-panels/CounterActionPanel";
 import { Card } from "../model/Card";
+import { ExchangeResult } from "../model/ExchangeResult";
 
 export class Level extends WsScene {
     private bankCoins: Coin[] = [];
@@ -90,6 +91,14 @@ export class Level extends WsScene {
             this.sendWsMessage({
                 messageType: GameMessage[GameMessage.Action],
                 data: engine.game.currentMove
+            });
+        };
+
+        // Set up sending exchange result to server on confirmation
+        engine.OnPendingExchangeConfirm = (exchangeResult: ExchangeResult) => {
+            this.sendWsMessage({
+                messageType: GameMessage[GameMessage.ExchangeComplete],
+                data: exchangeResult,
             });
         };
 
@@ -181,13 +190,16 @@ export class Level extends WsScene {
                 this.counterActionPanel.update();
                 this.hidePanel(this.counterActionPanel);
                 break;
-            case GameMessage[GameMessage.ChallengeBlockResult]:
             case GameMessage[GameMessage.ChallengeActionResult]:
+            case GameMessage[GameMessage.ChallengeBlockResult]:
             case GameMessage[GameMessage.WaitingReveal]:
                 break;
             case GameMessage[GameMessage.BlockAction]:
                 this.showPanel(this.counterActionPanel);
                 this.counterActionPanel.update();
+                break;
+            case GameMessage[GameMessage.YourExchangeCards]:
+                this.getHeroTablePlayer().renderExchange(message.Data.card1, message.Data.card2);
                 break;
             case GameMessage[GameMessage.ExchangeComplete]:
                 break;
@@ -227,13 +239,17 @@ export class Level extends WsScene {
                     }
                 }
                 tablePlayer.onPointerOut = (card: Card, cardImg: Phaser.GameObjects.Image) => {
-                    cardImg.clearTint();
-                    engine.pendingReveal = null;
+                    if (engine.waitingReveal() && engine.isHeroPlayer(engine.getWaitingRevealPlayer())){
+                        cardImg.clearTint();
+                        engine.pendingReveal = null;
+                    }
                 }
                 tablePlayer.onPointerUp = (card: Card, cardImg: Phaser.GameObjects.Image) => {
-                    this.sendWsMessage(engine.pendingReveal);
-                    cardImg.clearTint();
-                    engine.pendingReveal = null;
+                    if (engine.waitingReveal() && engine.isHeroPlayer(engine.getWaitingRevealPlayer())){
+                        this.sendWsMessage(engine.pendingReveal);
+                        cardImg.clearTint();
+                        engine.pendingReveal = null;
+                    }
                 }
             }
         }
@@ -322,16 +338,20 @@ export class Level extends WsScene {
         }
     }
 
-    private getCurrentTablePlayer(): TablePlayer {
-        const currentPlayer = engine.game.currentPlayer;
+    private getTablePlayerByName(playerName: string): TablePlayer {
+        return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName === playerName);
+    }
 
-        return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName === currentPlayer.name);
+    private getCurrentTablePlayer(): TablePlayer {
+        return this.getTablePlayerByName(engine.game.currentPlayer.name);
     }
 
     private getCurrentVsTablePlayer(): TablePlayer {
-        const vsPlayer = engine.game.currentMove.vsPlayer;
-        
-        return this.tablePlayers.find((tablePlayer) => tablePlayer.PlayerName === vsPlayer.name);
+        return this.getTablePlayerByName(engine.game.currentMove.vsPlayer.name);
+    }
+
+    private getHeroTablePlayer(): TablePlayer {
+        return this.getTablePlayerByName(engine.getHeroPlayer().name);
     }
 
     private enqueueTween(callback: () => void) {

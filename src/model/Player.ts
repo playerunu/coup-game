@@ -11,3 +11,15 @@ export type Player = {
 export function isEliminated(player: Player) {
     return player.card1 && player.card1.isRevealed && player.card2 && player.card2.isRevealed;
 }
+
+export function remainingCards(player: Player): number {
+    let remainingCards = 0;
+    if (!player.card1.isRevealed) {
+        remainingCards++;
+    }
+    if (!player.card2.isRevealed) {
+        remainingCards++;
+    }
+
+    return remainingCards;
+}

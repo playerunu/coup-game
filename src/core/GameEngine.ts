@@ -1,5 +1,5 @@
 import { Game } from "../model/Game";
-import { Card } from "../model/Card";
+import { Card, TwoCards } from "../model/Card";
 import { Influence } from "../model/Influence";
 import { Action, canCounter } from "../model/Action";
 import { Block } from "../model/Block";
@@ -10,6 +10,7 @@ import { ActionType } from "../model/Action";
 import { PlayerMove, playerMoveToStr } from "../model/PlayerMove";
 import { GameMessage } from "./GameMessage";
 import { challengeToStr } from "../model/Challenge";
+import { ExchangeResult } from "../model/ExchangeResult";
 
 export class GameEngine {
     // Intial game state is empty,  it will be populated by incremental updates from the back-end
@@ -36,6 +37,12 @@ export class GameEngine {
 
     public pendingCounter = null;
     public pendingReveal = null;
+    
+    public pendingExchangeResult = null;
+    private onPendingExchangeConfirmCallbacks: ((exchangeResult: ExchangeResult) => void)[] = [];
+    set OnPendingExchangeConfirm(callback: (exchangeResult: ExchangeResult) => void) {
+        this.onPendingExchangeConfirmCallbacks.push(callback);
+    }
 
     updateGameState(source: any) {
         let game = this.game;
@@ -295,6 +302,14 @@ export class GameEngine {
         }
     }
 
+    sendExchangeResult(playerCards: TwoCards, deckCards: TwoCards) {
+        this.pendingExchangeResult = {
+            player: this.getHeroPlayer(),
+            playerCards,
+            deckCards,
+        }
+    }
+
     isPendingCoup() {
         return this.pendingHeroPlayerMove?.action?.actionType === ActionType.Coup;
     }
@@ -323,6 +338,19 @@ export class GameEngine {
     confirmPendingCounter() {
         this.game.currentMove = this.pendingCounter.data;
         this.pendingCounter = null;
+    }
+
+    confirmPendingExchange() {
+        for (const callback of this.onPendingExchangeConfirmCallbacks) {
+            callback(this.pendingExchangeResult);
+        }
+
+        let heroPlayer = this.getHeroPlayer();
+        heroPlayer.card1 = this.pendingExchangeResult.playerCards.card1;
+        heroPlayer.card2 = this.pendingExchangeResult.playerCards.card2;
+        this.updateGameState({ "players": [heroPlayer] });
+        
+        this.pendingExchangeResult = null;
     }
 
     revealCard(card: Card) {

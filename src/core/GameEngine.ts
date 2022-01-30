@@ -290,7 +290,7 @@ export class GameEngine {
                 challengedBy: this.getHeroPlayer(),
             }
         } else {
-            messageType = GameMessage.ChallengeAction;
+            messageType = GameMessage.CurrentActionChallenge;
             counter.challenge = {
                 challengedBy: this.getHeroPlayer(),
             }
@@ -453,7 +453,7 @@ export class GameEngine {
             switch (this.pendingCounter.messageType) {
                 case (GameMessage[GameMessage.BlockAction]):
                     return `Block with ${influenceToStr(this.pendingCounter.pretendingInfluence)}`;
-                case (GameMessage[GameMessage.ChallengeAction]):
+                case (GameMessage[GameMessage.CurrentActionChallenge]):
                 case (GameMessage[GameMessage.ChallengeBlock]):
                     return "Challenge";
             }

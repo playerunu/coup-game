@@ -4,7 +4,7 @@ export enum GameMessage {
 	YourCards,
 	Action,
     ActionResult,
-	ChallengeAction,
+	CurrentActionChallenge,
 	ChallengeActionResult,
 	BlockAction,
 	ChallengeBlock,

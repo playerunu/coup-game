@@ -183,7 +183,7 @@ export class Level extends WsScene {
 
                 this.hidePanel(this.counterActionPanel);
                 break;
-            case GameMessage[GameMessage.ChallengeAction]:
+            case GameMessage[GameMessage.CurrentActionChallenge]:
             case GameMessage[GameMessage.ChallengeBlock]:
             case GameMessage[GameMessage.WaitingExchange]:
                 // Hide the challenge panel until the challenge is solved by the server

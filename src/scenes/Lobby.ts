@@ -29,47 +29,58 @@ export class Lobby extends WsScene {
         gameTitle.setVisible(false);
 
         // Name form
-        let text = this.add.text(baseWidth / 2, 10, "Please enter your name", { color: "black", fontSize: "20px" });
-        text.setOrigin(0.5, 0);
+        engine.heroPlayerName = Date.now().toString();
 
-        let nameForm = this.add.dom(baseWidth / 2, baseHeight / 2).createFromCache("nameform");
-        let me = this;
-
-        nameForm.addListener("click");
-        nameForm.on("click", function (event) {
-            if (event.target.name === "playButton") {
-                let inputText = this.getChildByName("nameField");
-
-                if (inputText.value != "") {
-                    this.removeListener("click");
-                    this.setVisible(false);
-                    engine.heroPlayerName = inputText.value;
-                    text.setText("Welcome " + engine.heroPlayerName);
-                    gameTitle.setVisible(true);
-                    me.sendWsMessage({
-                        messageType: GameMessage[GameMessage.PlayerJoined],
-                        data: {
-                            name: engine.heroPlayerName
-                        }
-                    });
-                } else {
-                    this.scene.tweens.add({
-                        targets: text,
-                        alpha: 0.2,
-                        duration: 250,
-                        ease: "Power3",
-                        yoyo: true
-                    });
-                }
+        this.sendWsMessage(
+            {
+                messageType: GameMessage[GameMessage.PlayerJoined],
+                data: {
+                    name: engine.heroPlayerName
+                }      
             }
-        });
+        );
 
-        this.tweens.add({
-            targets: nameForm,
-            y: baseHeight / 2,
-            duration: 3000,
-            ease: "Power3"
-        });
+        // let text = this.add.text(baseWidth / 2, 10, "Please enter your name", { color: "black", fontSize: "20px" });
+        // text.setOrigin(0.5, 0);
+
+        // let nameForm = this.add.dom(baseWidth / 2, baseHeight / 2).createFromCache("nameform");
+        // let me = this;
+
+        // nameForm.addListener("click");
+        // nameForm.on("click", function (event) {
+        //     if (event.target.name === "playButton") {
+        //         let inputText = this.getChildByName("nameField");
+
+        //         if (inputText.value != "") {
+        //             this.removeListener("click");
+        //             this.setVisible(false);
+        //             engine.heroPlayerName = inputText.value;
+        //             text.setText("Welcome " + engine.heroPlayerName);
+        //             gameTitle.setVisible(true);
+        //             me.sendWsMessage({
+        //                 messageType: GameMessage[GameMessage.PlayerJoined],
+        //                 data: {
+        //                     name: engine.heroPlayerName
+        //                 }
+        //             });
+        //         } else {
+        //             this.scene.tweens.add({
+        //                 targets: text,
+        //                 alpha: 0.2,
+        //                 duration: 250,
+        //                 ease: "Power3",
+        //                 yoyo: true
+        //             });
+        //         }
+        //     }
+        // });
+
+        // this.tweens.add({
+        //     targets: nameForm,
+        //     y: baseHeight / 2,
+        //     duration: 3000,
+        //     ease: "Power3"
+        // });
     }
 
     protected onWsMessage(event) {

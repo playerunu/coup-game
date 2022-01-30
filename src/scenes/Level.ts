@@ -207,6 +207,10 @@ export class Level extends WsScene {
                 this.nextPlayer();
                 break;
             case GameMessage[GameMessage.GameOver]:
+                // Don't allow any further actions - not the most elegant solution yet
+                this.hidePanel(this.heroPlayerPanel);
+                this.hidePanel(this.counterActionPanel);
+
                 break;
         }
     }

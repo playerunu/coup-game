@@ -380,21 +380,6 @@ export class TablePlayer extends Phaser.GameObjects.Container {
     this.update();
   }
 
-  private getExchangeCardImg(
-    exchangeCard: ExchangeCards
-  ): Phaser.GameObjects.Image {
-    switch (exchangeCard) {
-      case ExchangeCards.Card1:
-        return this.card1Img;
-      case ExchangeCards.Card2:
-        return this.card2Img;
-      case ExchangeCards.Card3:
-        return this.card3Img;
-      case ExchangeCards.Card4:
-        return this.card4Img;
-    }
-  }
-
   private moveCoinToBank(coin: Coin, waitingChallenge: boolean = false) {
     this.scene.tweens.add({
       targets: coin,

@@ -128,6 +128,11 @@ export class GameEngine {
     }
 
     canTakeCoin() {
+        if (this.game.winner) {
+            // Game over
+            return false;
+        }
+        
         if (!this.isHeroPlayer(this.game.currentPlayer)) {
             return false;
         }
@@ -392,6 +397,10 @@ export class GameEngine {
     }
 
     waitingReveal() {
+        if (this.game.winner) {
+            return false;
+        }
+        
         return this.game.currentMove?.waitingReveal
             || this.game.currentMove?.challenge?.waitingReveal   
             || this.game.currentMove?.block?.challenge?.waitingReveal;
@@ -429,6 +438,10 @@ export class GameEngine {
         const currentPlayerName = this.game.currentPlayer.name;
         const currentMove = this.game.currentMove;
         const vsPlayerName = this.game.currentMove?.vsPlayer?.name;
+
+        if (this.game.winner) {
+            return `${this.game.winner.name} won the game! GG WP NO RE!`
+        }
 
         if (this.pendingHeroPlayerMove) {
             switch (this.pendingHeroPlayerMove.action.actionType) {
@@ -498,7 +511,6 @@ export class GameEngine {
 
             return playerMoveToStr(currentMove, currentPlayerName);
         }
-
 
         return this.game.currentPlayer.name + "'s turn";
     }

@@ -8,6 +8,8 @@ import { deepMerge } from "../utils/deepMerge";
 
 
 export class Lobby extends WsScene {
+    private useDebugNames: boolean = false;
+
     create() {
         super.create();
 
@@ -28,59 +30,61 @@ export class Lobby extends WsScene {
         gameTitle.setOrigin(0.5, 0);
         gameTitle.setVisible(false);
 
-        // Name form
-        engine.heroPlayerName = Date.now().toString();
+        if (!this.useDebugNames) {
+            // Name form
+            let text = this.add.text(baseWidth / 2, 10, "Please enter your name", { color: "black", fontSize: "20px" });
+            text.setOrigin(0.5, 0);
 
-        this.sendWsMessage(
-            {
-                messageType: GameMessage[GameMessage.PlayerJoined],
-                data: {
-                    name: engine.heroPlayerName
-                }      
-            }
-        );
+            let nameForm = this.add.dom(baseWidth / 2, baseHeight / 2).createFromCache("nameform");
+            let me = this;
 
-        // let text = this.add.text(baseWidth / 2, 10, "Please enter your name", { color: "black", fontSize: "20px" });
-        // text.setOrigin(0.5, 0);
+            nameForm.addListener("click");
+            nameForm.on("click", function (event) {
+                if (event.target.name === "playButton") {
+                    let inputText = this.getChildByName("nameField");
 
-        // let nameForm = this.add.dom(baseWidth / 2, baseHeight / 2).createFromCache("nameform");
-        // let me = this;
+                    if (inputText.value != "") {
+                        this.removeListener("click");
+                        this.setVisible(false);
+                        engine.heroPlayerName = inputText.value;
+                        text.setText("Welcome " + engine.heroPlayerName);
+                        gameTitle.setVisible(true);
+                        me.sendWsMessage({
+                            messageType: GameMessage[GameMessage.PlayerJoined],
+                            data: {
+                                name: engine.heroPlayerName
+                            }
+                        });
+                    } else {
+                        this.scene.tweens.add({
+                            targets: text,
+                            alpha: 0.2,
+                            duration: 250,
+                            ease: "Power3",
+                            yoyo: true
+                        });
+                    }
+                }
+            });
 
-        // nameForm.addListener("click");
-        // nameForm.on("click", function (event) {
-        //     if (event.target.name === "playButton") {
-        //         let inputText = this.getChildByName("nameField");
+            this.tweens.add({
+                targets: nameForm,
+                y: baseHeight / 2,
+                duration: 3000,
+                ease: "Power3"
+            });
+        } else {
+            engine.heroPlayerName = Date.now().toString();
 
-        //         if (inputText.value != "") {
-        //             this.removeListener("click");
-        //             this.setVisible(false);
-        //             engine.heroPlayerName = inputText.value;
-        //             text.setText("Welcome " + engine.heroPlayerName);
-        //             gameTitle.setVisible(true);
-        //             me.sendWsMessage({
-        //                 messageType: GameMessage[GameMessage.PlayerJoined],
-        //                 data: {
-        //                     name: engine.heroPlayerName
-        //                 }
-        //             });
-        //         } else {
-        //             this.scene.tweens.add({
-        //                 targets: text,
-        //                 alpha: 0.2,
-        //                 duration: 250,
-        //                 ease: "Power3",
-        //                 yoyo: true
-        //             });
-        //         }
-        //     }
-        // });
-
-        // this.tweens.add({
-        //     targets: nameForm,
-        //     y: baseHeight / 2,
-        //     duration: 3000,
-        //     ease: "Power3"
-        // });
+            this.sendWsMessage(
+                {
+                    messageType: GameMessage[GameMessage.PlayerJoined],
+                    data: {
+                        name: engine.heroPlayerName
+                    }      
+                }
+            );
+        }
     }
 
     protected onWsMessage(event) {
